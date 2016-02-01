@@ -20,11 +20,10 @@ use base 'Exporter';
 
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);
-our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME
+our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME $CTPP
 	makeTemplatePage htmlPage xmlPage e404 e500 e403 redirect url_escape ajax u2 removeTags
 	request_content no_cache runTemplate
 );
-
 
 sub no_cache {
   $R->err_headers_out->add('Pragma', 'no-cache');
