@@ -3,7 +3,6 @@ use strict;
 
 sub _make_token_key {
         my ($user_id, $time, $ipaddr, $secret) = @_;
-warn "mtk: $user_id, $time, $ipaddr, $secret\n";
         my $network = substr(join('', map {sprintf('%08b', $_)} split(/\./, $ipaddr)), 0, 20);
         return Digest::MD5::md5_base64(join('+', $secret, $time, $user_id, $network));
 }
