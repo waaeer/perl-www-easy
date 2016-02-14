@@ -17,6 +17,8 @@ use Apache2::Cookie;
 use HTML::Strip;
 use base 'Exporter';
 
+use WWW::Easy::Auth;
+our $VERSION = "0.5";
 
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);
@@ -190,33 +192,16 @@ sub ajax {
 sub checkToken {
         my ($r, $name, $ttl, $secret) = @_;
         my $cookies = Apache2::Cookie->fetch($r);
-        my $cookie = $cookies->{$name} || return undef;
-        return undef if $cookie eq 'no';
-		$cookie =~ s/%(\w\w)/chr(hex($1))/gsex;
-		$cookie =~ s/^$name=//;
-        my ($key, $user_id, $time) = split('!', $cookie);
-        my $now = time();
-        if ($time > $now) {
-            warn "[AUTH \"$name\"] check_ticket error: Suspect fake cookie: the time set in cookie is in future. Now: $now, cookie time: $time.";
-            return undef;
-        }
-        my $key_should_be = _make_token_key($user_id, $time, $r, $secret);
-        if ($key eq $key_should_be) {
-            if ($ttl && ($now - $time) > $ttl ) {
-                warn "[AUTH \"$name\"] check_ticket error: Cookie $cookie expired: time=$time; now=$now";
-                return undef;
-            }
-            return $user_id;
-        }
-		warn "[AUTH \"$name\"] check_ticket error: '$key' ne '$key_should_be'";
-        return undef;
+        my $token = $cookies->{$name} || return undef;
+		$token =~ s/^$name=//;
+		my $ipaddr = $r->headers_in->{'X-Real-IP'};
+		return WWW::Easy::Auth::_check_token ($name, $token, $ipaddr, $ttl, $secret);
 }        
 
 sub _make_token_key {
         my ($user_id, $time, $r, $secret) = @_;
         my $ipaddr = $r->headers_in->{'X-Real-IP'};
-        my $network = substr(join('', map {sprintf('%08b', $_)} split(/\./, $ipaddr)), 0, 20);
-        return Digest::MD5::md5_base64(join('+', $secret, $time, $user_id, $network));
+		return WWW::Easy::Auth::_make_token_key($user_id, $time, $ipaddr, $secret);
 }
 
 sub sendToken { 

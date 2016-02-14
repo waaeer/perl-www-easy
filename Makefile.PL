@@ -2,6 +2,6 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME            => 'WWW::Easy',
-    VERSION_FROM    => 'Easy.pm'
+    VERSION_FROM    => 'lib/WWW/Easy.pm'
 );
 
