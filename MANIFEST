@@ -1,0 +1,15 @@
+lib/WWW/Easy.pm
+lib/WWW/Easy/Auth.pm
+Makefile.PL
+debian/changelog
+debian/compat
+debian/control
+debian/copyright
+debian/libwww-easy-perl.docs
+debian/rules
+debian/source/format
+debian/watch
+MANIFEST
+LICENSE
+README.md
+
