@@ -18,7 +18,7 @@ use HTML::Strip;
 use base 'Exporter';
 
 use WWW::Easy::Auth;
-our $VERSION = "0.5";
+our $VERSION = "0.6";
 
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);

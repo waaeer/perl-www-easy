@@ -1,4 +1,5 @@
 package WWW::Easy::Auth;
+use Digest::MD5;
 use strict;
 
 sub _make_token_key {
