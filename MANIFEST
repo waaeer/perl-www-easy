@@ -1,5 +1,6 @@
 lib/WWW/Easy.pm
 lib/WWW/Easy/Auth.pm
+lib/WWW/Easy/AnyEvent.pm
 Makefile.PL
 debian/changelog
 debian/compat
