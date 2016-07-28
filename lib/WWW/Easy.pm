@@ -209,7 +209,7 @@ sub sendToken {
         my $cookie = join('!', _make_token_key ($user_id, $now, $r, $secret), $user_id, $now);
         my $coo = Apache2::Cookie->new($r,
 			  -httponly => 1,
-			  -secure   => ($r->headers_in()->{X-AbsHome} =~ m|^https://| ? 1 : 0),
+			  -secure   => ($r->headers_in()->{'X-AbsHome'} =~ m|^https://| ? 1 : 0),
               -name  => $name,
               -value => $cookie, 
               -path  => "/"

@@ -17,6 +17,7 @@ sub new {
 			if ($request->[1] =~ m|^/api/([-\w]+)|) { 
 				my $method = $1;
 				my $args = '';
+				my %h = (headers=>{connection=>'close'});
 				return sub {  # on body loaded:
 					my ($final, $bodyref) = @_;
 					$args.=$$bodyref;
@@ -32,7 +33,7 @@ sub new {
 							$self->checkPassword( $args->[0], $args->[1], sub { 
 								my $user_id = shift;
 								$request->replyjs($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}, 
-									headers => ($user_id ? { "Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly" } : { }),
+									headers => (%h, ($user_id ? { "Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly" } : { })),
 									## send token in headers
 								);
 							});
@@ -43,7 +44,7 @@ sub new {
 						if($opt{authentication}) {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
 							if(!$user_id) { 
-								$request->replyjs({must_authenticate=>1});
+								$request->replyjs(200, {must_authenticate=>1}, %h);
 								return;
 							}
 						}
@@ -51,16 +52,16 @@ sub new {
 						if($func) { 
 							$func->($args, $user_id, sub { 
 								my $ret = shift;
-								$request->replyjs(200, $ret );
+								$request->replyjs(200, $ret , %h);
 							});
 						} else { 
 							warn "Unknown method $method";
-							$request->replyjs(404, {error=>"Unknown method $method"}, headers => {});
+							$request->replyjs(404, {error=>"Unknown method $method"}, %h);
 						}
 					};
 					if(my $err = $@) {
 						warn "Error occured :", Data::Dumper::Dumper($method, $args, $err);
-						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )});
+						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, %h);
 					} 
 				};
 			} else { 
