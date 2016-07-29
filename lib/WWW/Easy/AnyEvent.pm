@@ -33,7 +33,7 @@ sub new {
 							$self->checkPassword( $args->[0], $args->[1], sub { 
 								my $user_id = shift;
 								$request->replyjs($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}, 
-									headers => (%h, ($user_id ? { "Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly" } : { })),
+									headers => { %{$h{headers}}, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())},
 									## send token in headers
 								);
 							});
