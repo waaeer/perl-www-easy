@@ -209,7 +209,7 @@ sub sendToken {
         my $cookie = join('!', _make_token_key ($user_id, $now, $r, $secret), $user_id, $now);
         my $coo = Apache2::Cookie->new($r,
 			  -httponly => 1,
-			  -secure   => ($r->headers_in()->{X-AbsHome} =~ m|^https://| ? 1 : 0),
+			  -secure   => ($r->headers_in()->{'X-AbsHome'} =~ m|^https://| ? 1 : 0),
               -name  => $name,
               -value => $cookie, 
               -path  => "/"
@@ -233,6 +233,18 @@ my %templateCache;
 sub makeTemplatePage {
         my ($template,$type,%opt) = @_;
         
+		if(ref($template) eq 'ARRAY') { 
+			my $dir = $R->dir_config('CUSTOM_TEMPATES') || $R->dir_config('TEMPLATES');
+			my $ok;
+			foreach my $t (@$template) { 
+				if(-f "$dir/$t") { 
+					$ok = $t; last;
+				}
+			}
+			if($ok) { $template = $ok; } 
+			else { retur 404; } 
+		
+		}
         my $obj ## devel! = $templateCache{$template}  ## do not autoreread if cache on!
                 ||= $CTPP->parse_template("$template.ctpp");
         if(!$obj) { 
