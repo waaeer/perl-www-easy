@@ -237,12 +237,14 @@ sub makeTemplatePage {
 			my $dir = $R->dir_config('CUSTOM_TEMPATES') || $R->dir_config('TEMPLATES');
 			my $ok;
 			foreach my $t (@$template) { 
-				if(-f "$dir/$t") { 
+				warn "search in $dir/$t\n";
+				if(-f "$dir/$t.ctpp") { 
 					$ok = $t; last;
 				}
 			}
+			warn "found: $ok\n";
 			if($ok) { $template = $ok; } 
-			else { retur 404; } 
+			else { return 404; } 
 		
 		}
         my $obj ## devel! = $templateCache{$template}  ## do not autoreread if cache on!

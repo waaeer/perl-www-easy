@@ -9,12 +9,14 @@ use base qw(AnyEvent::HTTP::Server);
 sub new { 	
 	my ($class,%opt) = @_;
 	my $KEY = $opt{token_key};
+	my $apiprefix = $opt{api_prefix} || '/api';
+	my %public_methods = $opt{public_methods} ? map { $_=>1 } @{ $opt{public_methods}} : ();
 	my $self;
 	$self = AnyEvent::HTTP::Server->new(
 		%opt,
 		cb => sub {
 			my $request = shift;
-			if ($request->[1] =~ m|^/api/([-\w]+)|) { 
+			if ($request->[1] =~ m|^${apiprefix}/([-\w]+)|) { 
 				my $method = $1;
 				my $args = '';
 				return sub {  # on body loaded:
@@ -36,11 +38,12 @@ sub new {
 									## send token in headers
 								);
 							});
+
 							return;
 							### toDo:: check and sendToken or return { must_authenticate=>1, reason=>'Bad' });
 						}
 						my $user_id;
-						if($opt{authentication}) {
+						if($opt{authentication} && !$public_method{$method}) {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
 							if(!$user_id) { 
 								$request->replyjs({must_authenticate=>1});
