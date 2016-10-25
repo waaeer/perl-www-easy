@@ -8,8 +8,10 @@ use base qw(AnyEvent::HTTP::Server);
 
 sub new { 	
 	my ($class,%opt) = @_;
-	my $KEY = $opt{token_key};
+	my $KEY     = delete $opt{token_key};
+	my $verbose = delete $opt{verbose};
 	my $self;
+
 	$self = AnyEvent::HTTP::Server->new(
 		%opt,
 		cb => sub {
@@ -18,6 +20,7 @@ sub new {
 				my $method = $1;
 				my $args = '';
 				my %h = (headers=>{connection=>'close'});
+				warn "API method $method called\n" if $verbose;
 				return sub {  # on body loaded:
 					my ($final, $bodyref) = @_;
 					$args.=$$bodyref;
@@ -51,8 +54,15 @@ sub new {
 						my $func = $class->can("api_$method");
 						if($func) { 
 							$func->($args, $user_id, sub { 
-								my $ret = shift;
-								$request->replyjs(200, $ret , %h);
+								my ($ret,$headers,$action) = @_;
+								if($action eq 'logout') { 
+									("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")
+								}
+								$request->replyjs(200, $ret , headers=>{
+									%{$h{headers}}, 
+									($headers?%$headers:()), 
+									($action eq 'logout' ? ("Set-Cookie" => "u=ram; Path=/; HttpOnly") :())
+								} );
 							});
 						} else { 
 							warn "Unknown method $method";
@@ -122,6 +132,12 @@ sub checkToken {
     return WWW::Easy::Auth::_check_token ($name, $token, $ipaddr, $ttl, $secret);
 }
 
+sub url_escape { 
+        my $x = $_[0];
+        use bytes;
+        $x=~s/([^0-9a-zA-Z])/sprintf("%%%02x",ord($1))/gsex;
+        return $x;
+}
 
 1;
 
