@@ -10,17 +10,19 @@ sub new {
 	my ($class,%opt) = @_;
 	my $KEY     = delete $opt{token_key};
 	my $verbose = delete $opt{verbose};
+	my $apiprefix      = $opt{api_prefix} || '/api';
+	my %public_methods = $opt{public_methods} ? map { $_=>1 } @{ $opt{public_methods}} : ();
 	my $self;
 
 	$self = AnyEvent::HTTP::Server->new(
 		%opt,
 		cb => sub {
 			my $request = shift;
-			if ($request->[1] =~ m|^/api/([-\w]+)|) { 
+			if ($request->[1] =~ m|^${apiprefix}/([-\w]+)|) { 
 				my $method = $1;
 				my $args = '';
-				my %h = (headers=>{connection=>'close'});
 				warn "API method $method called\n" if $verbose;
+				my %h = (connection=>'close');
 				return sub {  # on body loaded:
 					my ($final, $bodyref) = @_;
 					$args.=$$bodyref;
@@ -36,18 +38,19 @@ sub new {
 							$self->checkPassword( $args->[0], $args->[1], sub { 
 								my $user_id = shift;
 								$request->replyjs($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}, 
-									headers => { %{$h{headers}}, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())},
+									headers => { %h, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())},
 									## send token in headers
 								);
 							});
+
 							return;
 							### toDo:: check and sendToken or return { must_authenticate=>1, reason=>'Bad' });
 						}
 						my $user_id;
-						if($opt{authentication}) {
+						if($opt{authentication} && !$public_methods{$method}) {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
 							if(!$user_id) { 
-								$request->replyjs(200, {must_authenticate=>1}, %h);
+								$request->replyjs(200, {must_authenticate=>1}, {headers=>\%h});
 								return;
 							}
 						}
@@ -55,23 +58,22 @@ sub new {
 						if($func) { 
 							$func->($args, $user_id, sub { 
 								my ($ret,$headers,$action) = @_;
-								if($action eq 'logout') { 
-									("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")
+								my %addh = $headers ? %$headers : ();
+								if($action eq 'logout') {
+									$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
+								} elsif( $action eq 'set_user_token') {   
+									$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
 								}
-								$request->replyjs(200, $ret , headers=>{
-									%{$h{headers}}, 
-									($headers?%$headers:()), 
-									($action eq 'logout' ? ("Set-Cookie" => "u=ram; Path=/; HttpOnly") :())
-								} );
+								$request->replyjs(200, $ret , headers=>{  %h, %addh });
 							});
 						} else { 
 							warn "Unknown method $method";
-							$request->replyjs(404, {error=>"Unknown method $method"}, %h);
+							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
 						}
 					};
 					if(my $err = $@) {
 						warn "Error occured :", Data::Dumper::Dumper($method, $args, $err);
-						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, %h);
+						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>%h);
 					} 
 				};
 			} else { 
