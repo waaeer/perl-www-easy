@@ -1,4 +1,4 @@
-package WWW::Easy::AnyEvent;
+	package WWW::Easy::AnyEvent;
 use common::sense;
 use EV;
 use WWW::Easy::Auth;
@@ -57,11 +57,11 @@ sub new {
 						my $func = $class->can("api_$method");
 						if($func) { 
 							$func->($args, $user_id, sub { 
-								my ($ret,$headers,$action) = @_;
-								my %addh = $headers ? %$headers : ();
-								if($action eq 'logout') {
+								my ($ret, %opt,$action) = @_;
+								my %addh = $opt{headers} ? %{$opt{headers}} : ();
+								if($opt{logout}) { 
 									$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
-								} elsif( $action eq 'set_user_token') {   
+								} elsif( my $user_id = $opt{set_user_token})  {
 									$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
 								}
 								$request->replyjs(200, $ret , headers=>{  %h, %addh });
