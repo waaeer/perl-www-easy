@@ -80,7 +80,7 @@ sub new {
 				my $uri = $request->[1]; 
 				my $page = $uri;
 				$page =~ s|^/+||gs;
-				$page =~ s|[\./]|_|sg;
+				$page =~ s|[\./-]|_|sg;
 				$page ||= 'main';
 				if (my $func = $self->can("page_$page")) { 
 					eval { 
