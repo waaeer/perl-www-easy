@@ -56,6 +56,7 @@ sub new {
 						}
 						my $func = $class->can("api_$method");
 						if($func) { 
+							my %context;
 							$func->($args, $user_id, sub { 
 								my ($ret, %opt,$action) = @_;
 								my %addh = $opt{headers} ? %{$opt{headers}} : ();
@@ -65,7 +66,7 @@ sub new {
 									$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
 								}
 								$request->replyjs(200, $ret , headers=>{  %h, %addh });
-							});
+							}, \%context);
 						} else { 
 							warn "Unknown method $method";
 							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
