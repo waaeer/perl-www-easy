@@ -15,6 +15,7 @@ use Digest::MD5;
 use Encode;
 use HTML::Strip;
 use base 'Exporter';
+use POSIX qw(modf);
 
 use WWW::Easy::Auth;
 our $VERSION = "0.6";
@@ -26,6 +27,13 @@ our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME $CTPP
 	request_content no_cache runTemplate
 );
 
+BEGIN { 
+	$SIG{__WARN__} = sub {
+		my $t = Time::HiRes::time();
+		my ($s, $m, $h, $day, $mon, $year) = (localtime(int $t))[0 .. 5];
+		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [WARN $$] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000)), @_;
+	}
+}
 sub no_cache {
   $R->err_headers_out->add('Pragma', 'no-cache');
   $R->err_headers_out->add('Cache-control', 'no-cache,no-store');
