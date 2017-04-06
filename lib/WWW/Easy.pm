@@ -7,6 +7,7 @@ use Apache2::RequestIO;
 use Apache2::Connection;
 use Apache2::Cookie;
 use Apache2::Request;
+use Apache2::ServerRec;
 use Apache2::Log;
 use HTML::CTPP2;
 use JSON::XS;
@@ -16,6 +17,7 @@ use Encode;
 use HTML::Strip;
 use base 'Exporter';
 use POSIX qw(modf);
+use Time::HiRes;
 
 use WWW::Easy::Auth;
 our $VERSION = "0.6";
@@ -31,7 +33,7 @@ BEGIN {
 	$SIG{__WARN__} = sub {
 		my $t = Time::HiRes::time();
 		my ($s, $m, $h, $day, $mon, $year) = (localtime(int $t))[0 .. 5];
-		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [WARN $$] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000)), @_;
+		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), $R->server->server_hostname ), @_;
 	}
 }
 sub no_cache {
@@ -55,7 +57,7 @@ sub handler {
                 my $parser = APR::Request::Parser->urlencoded($pool, $ba, 'application/x-www-form-urlencoded');
 
                 $APR = APR::Request::Custom->handle($pool,
-                                 $standalone_args->{args},
+                                 $standalone_args->{args},  
                                  '',
                                  $parser,
                                  10000,
