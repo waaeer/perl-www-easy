@@ -33,7 +33,7 @@ BEGIN {
 	$SIG{__WARN__} = sub {
 		my $t = Time::HiRes::time();
 		my ($s, $m, $h, $day, $mon, $year) = (localtime(int $t))[0 .. 5];
-		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), $R->server->server_hostname ), @_;
+		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), ($R && $R->server ? $R->server->server_hostname : 'NoServer') ), @_;
 	}
 }
 sub no_cache {
