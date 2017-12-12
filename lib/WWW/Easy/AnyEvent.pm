@@ -1,4 +1,4 @@
-	package WWW::Easy::AnyEvent;
+package WWW::Easy::AnyEvent;
 use common::sense;
 use EV;
 use WWW::Easy::Auth;
@@ -49,10 +49,13 @@ sub new {
 						my $user_id;
 						if($opt{authentication} && !$public_methods{$method}) {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
+							warn "got user=$user_id\n";
 							if(!$user_id) { 
+								warn "must auth\n";
 								$request->replyjs(200, {must_authenticate=>1}, {headers=>\%h});
 								return;
 							}
+							warn "no auth\n";
 						}
 						my $func = $class->can("api_$method");
 						if($func) { 
@@ -132,6 +135,7 @@ sub checkToken {
 	my $token = $headers->{'cookie+'.$name} || return undef;
 	$token =~ s/^$name=//;
     my $ipaddr = $headers->{'x-real-ip'};
+warn "check token $token for $ipaddr\n";
     return WWW::Easy::Auth::_check_token ($name, $token, $ipaddr, $ttl, $secret);
 }
 
