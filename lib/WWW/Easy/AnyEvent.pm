@@ -29,6 +29,8 @@ sub new {
 					if(!$final) { 
 						return;
 					}
+					my $diehandler = $SIG{__DIE__};
+                    $SIG{__DIE__} = undef;
 					eval {
 						$args &&= JSON::XS::decode_json($args);
 						$args ||= {};
@@ -79,6 +81,7 @@ sub new {
 						warn "Error occured :", Data::Dumper::Dumper($method, $args, $err);
 						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>%h);
 					} 
+					$SIG{__DIE__} = $diehandler;
 				};
 			} else { 
 				my $uri = $request->[1]; 

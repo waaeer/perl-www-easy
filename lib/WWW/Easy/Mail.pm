@@ -92,6 +92,10 @@ sub send {
 	my %opt = @_;
 	my $mailer = $opt{mail_client};
 	my $class = "WWW::Easy::Mail::".$mailer->{mailer};
+	if ($mailer->{mailer} !~ /^SMTP$/) { 
+		die("Unknown mailer $mailer->{mailer}");
+	}
+
 	my $client = $class->new(%{ $mailer->{mailer_args} });
 	my $message = _build(\%opt);
 #	print $message->as_string."\n";
@@ -187,17 +191,18 @@ sub send {
 	my ($self, $message, $opt) = @_;
 	my $smtp = Net::SMTP->new (
 		$self->{host},
-		Port => $self->{post},
+		Port => $self->{port},
 		SSL  => $self->{ssl},
+		Hello => $self->{hello},
 	) || die("Cannot connect SMTP server $self->{host}:$self->{port} with ssl=$self->{ssl}");
 	if($self->{username}) { 
 		my $ok = $smtp->auth( $self->{username}, $self->{password});
 		if(!$ok) { 
-			die("Cound not authenticate: ".$smtp->message);
+			die("Cound not authenticate ($self->{username} $self->{password}) : ".$smtp->message);
 		}
 	}
 	my $sender = ref($opt->{from}) eq 'ARRAY' ? $opt->{from}->[0] : $opt->{from};
-warn "semder=$sender\n";
+#warn "semder=$sender\n";
 	$smtp->mail($sender) || die("cannot send MAIL: $sender:".$smtp->message);
 	my @recipients;
 	if(my $to = $opt->{to}) { 
