@@ -70,6 +70,7 @@ sub new {
 								} elsif( my $user_id = $opt{set_user_token})  {
 									$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
 								}
+#								warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
 								$request->replyjs(200, $ret , headers=>{  %h, %addh });
 							}, \%context);
 						} else { 
