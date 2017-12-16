@@ -2,7 +2,7 @@ libwww-easy-perl (0.7-1) unstable; urgency=medium
 
   * Mail sending library
 
--- Ivan Panchenko <wao@mail.ru>  Sat, 16 Dec 2017 11:20:00 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Sat, 16 Dec 2017 11:20:00 +0300
 
 libwww-easy-perl (0.6-1) UNRELEASED; urgency=medium
 
