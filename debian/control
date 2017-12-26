@@ -4,13 +4,14 @@ Priority: optional
 Maintainer: Ivan Panchenko <wao@mail.ru>
 Build-Depends: debhelper (>= 9)
 Build-Depends-Indep: perl
-Standards-Version: 3.9.6
+Standards-Version: 3.9.8
 Homepage: https://metacpan.org/release/WWW-Easy
 
 Package: libwww-easy-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, libhtml-ctpp2-perl,
   libjson-xs-perl, libhtml-strip-perl,  libapache2-mod-perl2,
-  libapache2-mod-apreq2, libapache2-request-perl, libnet-server-perl, libfile-slurp-perl
+  libapache2-mod-apreq2, libapache2-request-perl, libnet-server-perl, libfile-slurp-perl,
+  libproc-pid-file-perl, libdevel-stacktrace-perl, libanyevent-http-server-ii-perl
 Description: Minimalistic perl web framework
   Runs ander apache2; uses ctpp for templating.
