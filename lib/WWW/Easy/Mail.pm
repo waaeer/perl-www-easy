@@ -106,7 +106,7 @@ sub _serialize_addr {
 	my $addr = shift;
 	return undef unless $addr;
 	if (ref($addr) eq 'ARRAY') { 
-		return join(',', map { 
+		return join(', ', map { 
 			(ref($_) eq 'ARRAY') 
 			? Mail::Address->new(_2u($_->[1]), $_->[0])->format()
 			: $_
@@ -127,7 +127,7 @@ sub _build {
 		Subject => encode('MIME-Header', _2u($subject)),
 		To      => encode('MIME-Header', _serialize_addr($to)),
 		From    => encode('MIME-Header', _serialize_addr([$from])),
-		Cc      => encode('MIME-Header', _serialize_addr([$cc])),
+		Cc      => encode('MIME-Header', _serialize_addr($cc)),
 		'Message-ID' => '<'.encode('MIME-Header',sprintf('M_%04i%lx%d',int(rand(2e9)),time,$$). 
 				(ref($from) eq 'ARRAY' ? $from->[0] : $from)
 		).'>',
