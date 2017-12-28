@@ -85,6 +85,7 @@ sub _build_text_and_html {
 	} else { 
 		die "No text in message";
 	}
+#	warn  $main->as_string,"\n";
 	return $main;
 	
 }
@@ -106,13 +107,18 @@ sub _serialize_addr {
 	my $addr = shift;
 	return undef unless $addr;
 	if (ref($addr) eq 'ARRAY') { 
-		return join(', ', map { 
+		my $res = join(', ', map { 
 			(ref($_) eq 'ARRAY') 
-			? Mail::Address->new(_2u($_->[1]), $_->[0])->format()
-			: $_
+			? Mail::Address->new(_2u($_->[1]), _2u($_->[0]))->format()
+			: _2u($_)
 		} @$addr);
+		$res =~ s/(".*?")/encode('MIME-Header', $1)/gsex;
+#		warn "res from ".Data::Dumper::Dumper($addr, $res);
+		return $res;
 	} else { 
-		return  encode('MIME-Header', _u2($addr));
+		return _u2($addr);
+#		warn "addr $addr er to ".encode('MIME-Header', _u2($addr))."\n";
+#		return  encode('MIME-Header', _u2($addr));
 	}
 }
 sub _build { 
@@ -125,15 +131,15 @@ sub _build {
 	my %email_header = (
 		Top => 1,
 		Subject => encode('MIME-Header', _2u($subject)),
-		To      => encode('MIME-Header', _serialize_addr($to)),
-		From    => encode('MIME-Header', _serialize_addr([$from])),
-		Cc      => encode('MIME-Header', _serialize_addr($cc)),
+		To      => _serialize_addr($to),
+		From    => _serialize_addr([$from]),
+		Cc      => _serialize_addr($cc),
 		'Message-ID' => '<'.encode('MIME-Header',sprintf('M_%04i%lx%d',int(rand(2e9)),time,$$). 
 				(ref($from) eq 'ARRAY' ? $from->[0] : $from)
 		).'>',
 		Date    => Email::Date::Format::email_date(),
 	);
-
+#	warn Data::Dumper::Dumper('header', \%email_header);
 	if(my $files = $opt->{attachment}) { 
 		my $cont = MIME::Entity->build (
 			%email_header,
