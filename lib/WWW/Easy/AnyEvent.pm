@@ -84,6 +84,52 @@ sub new {
 					} 
 					$SIG{__DIE__} = $diehandler;
 				};
+			} elsif($request->[0] eq 'POST') { 
+				my $uri = $request->[1];
+				$uri =~ s|^/+||gs;
+				$uri =~ s|[\./-]|_|sg;
+				if ($request->[2]->{'content-type'} eq 'application/x-www-form-urlencoded') {
+					my $func = $self->can("post_$uri");
+					return {
+							form => $func ? sub {
+								my ($form) = @_;
+								my %data; 
+								foreach my $k (keys %$form) { 
+									my $v = $form->{$k};
+									$data{$k} = ref($v) eq 'aehts::av' ? [map { $_->[0] } @$v ] : $v->[0];
+								}
+								$func->(\%data, $request);
+							} : sub {
+								$request->reply(404, 'No handler');
+							}
+											
+					};
+				} elsif($request->[2]->{'content-type'} =~ m|^multipart/form-data|) { 
+					my $func = $self->can("post_$uri");
+					my %data;
+					return { multipart => $func ? sub {
+								my ($last, $part, $h) = @_;
+								if ($h->{'content-disposition'} =~ /^form-data/) { 
+									my $name = $h->{name};
+									if ($name =~ /\S/) { 
+										$data{$name} = $part;
+									}
+								} elsif (%$h) { 
+									warn "Content disposition ".$h->{'content-disposition'}." not supported yet\n";
+								}
+								$func->(\%data, $request) if $last;
+							 } : sub {
+								my ($last, $part, $h) = @_;
+								$request->reply(404, 'No handler') if $last;
+							 }
+					};
+				} else {
+					return sub {
+						warn "No form handler for POST $uri ".$request->[2]->{'content-type'}."\n";
+						warn  Data::Dumper::Dumper($request);
+						$request->reply(404, 'No handler');
+					}
+				}
 			} else { 
 				my $uri = $request->[1]; 
 				my $page = $uri;
