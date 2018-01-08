@@ -12,17 +12,18 @@ sub new {
 	my $verbose = delete $opt{verbose};
 	my $apiprefix      = $opt{api_prefix} || '/api';
 	my %public_methods = $opt{public_methods} ? map { $_=>1 } @{ $opt{public_methods}} : ();
+	my %public_posts   = $opt{public_posts}   ? map { $_=>1 } @{ $opt{public_posts}} : ();
 	my $self;
 
 	$self = AnyEvent::HTTP::Server->new(
 		%opt,
 		cb => sub {
 			my $request = shift;
+			my %h = (connection=>'close');
 			if ($request->[1] =~ m|^${apiprefix}/([-\w]+)|) { 
 				my $method = $1;
 				my $args = '';
 				warn "API method $method called\n" if $verbose;
-				my %h = (connection=>'close');
 				return sub {  # on body loaded:
 					my ($final, $bodyref) = @_;
 					$args.=$$bodyref;
@@ -51,13 +52,12 @@ sub new {
 						my $user_id;
 						if($opt{authentication} && !$public_methods{$method}) {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
-							warn "got user=$user_id\n";
+							warn "got user=$user_id\n" if $verbose;
 							if(!$user_id) { 
 								warn "must auth\n";
 								$request->replyjs(200, {must_authenticate=>1}, {headers=>\%h});
 								return;
 							}
-							warn "no auth\n";
 						}
 						my $func = $class->can("api_$method");
 						if($func) { 
@@ -88,6 +88,16 @@ sub new {
 				my $uri = $request->[1];
 				$uri =~ s|^/+||gs;
 				$uri =~ s|[\./-]|_|sg;
+				my ($user_id, %context);
+				if($opt{authentication} && !$public_posts{$uri}) {
+					$user_id = $self->checkToken($request,'u',86400,$KEY);
+					warn "got user=$user_id\n" if $verbose;
+                    if(!$user_id) { 
+                    	warn "must auth\n" if $verbose;
+                        $request->reply(400, 'Must authenticate for this POST', {headers=>\%h});
+                      	return;
+                    }
+				}
 				if ($request->[2]->{'content-type'} eq 'application/x-www-form-urlencoded') {
 					my $func = $self->can("post_$uri");
 					return {
@@ -98,7 +108,13 @@ sub new {
 									my $v = $form->{$k};
 									$data{$k} = ref($v) eq 'aehts::av' ? [map { $_->[0] } @$v ] : $v->[0];
 								}
-								$func->(\%data, $request);
+								eval {
+									$func->(\%data, $request, \%context, $user_id);
+								};
+								if(my $err = $@) {
+									warn "Error occured in POST :", Data::Dumper::Dumper($uri, \%data, $err);
+									$request->reply(500, 'Error occured');
+								}
 							} : sub {
 								$request->reply(404, 'No handler');
 							}
@@ -117,7 +133,15 @@ sub new {
 								} elsif (%$h) { 
 									warn "Content disposition ".$h->{'content-disposition'}." not supported yet\n";
 								}
-								$func->(\%data, $request) if $last;
+								if($last) { 
+									eval { 
+										$func->(\%data, $request, \%context, $user_id);
+									};
+									if(my $err = $@) {
+										warn "Error occured in multipart POST :", Data::Dumper::Dumper($uri, \%data, $err);
+										$request->reply(500, 'Error occured');
+									}
+								}
 							 } : sub {
 								my ($last, $part, $h) = @_;
 								$request->reply(404, 'No handler') if $last;
