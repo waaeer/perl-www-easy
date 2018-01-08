@@ -78,11 +78,11 @@ sub new {
 							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
 						}
 					};
+					$SIG{__DIE__} = $diehandler;
 					if(my $err = $@) {
 						warn "Error occured :", Data::Dumper::Dumper($method, $args, $err);
 						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>%h);
 					} 
-					$SIG{__DIE__} = $diehandler;
 				};
 			} elsif($request->[0] eq 'POST') { 
 				my $uri = $request->[1];
@@ -108,9 +108,12 @@ sub new {
 									my $v = $form->{$k};
 									$data{$k} = ref($v) eq 'aehts::av' ? [map { $_->[0] } @$v ] : $v->[0];
 								}
+								my $diehandler = $SIG{__DIE__};
+            			        $SIG{__DIE__} = undef;
 								eval {
 									$func->(\%data, $request, \%context, $user_id);
 								};
+								$SIG{__DIE__} = $diehandler;
 								if(my $err = $@) {
 									warn "Error occured in POST :", Data::Dumper::Dumper($uri, \%data, $err);
 									$request->reply(500, 'Error occured');
@@ -134,9 +137,12 @@ sub new {
 									warn "Content disposition ".$h->{'content-disposition'}." not supported yet\n";
 								}
 								if($last) { 
+									my $diehandler = $SIG{__DIE__};
+    	        			        $SIG{__DIE__} = undef;
 									eval { 
 										$func->(\%data, $request, \%context, $user_id);
 									};
+									$SIG{__DIE__} = $diehandler;
 									if(my $err = $@) {
 										warn "Error occured in multipart POST :", Data::Dumper::Dumper($uri, \%data, $err);
 										$request->reply(500, 'Error occured');
