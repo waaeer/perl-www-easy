@@ -3,6 +3,7 @@ lib/WWW/Easy/Auth.pm
 lib/WWW/Easy/AnyEvent.pm
 lib/WWW/Easy/Daemon.pm
 lib/WWW/Easy/Mail.pm
+lib/WWW/Easy/SPI.pm
 Makefile.PL
 debian/changelog
 debian/compat

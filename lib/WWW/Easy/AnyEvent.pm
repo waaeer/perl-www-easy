@@ -81,7 +81,7 @@ sub new {
 					$SIG{__DIE__} = $diehandler;
 					if(my $err = $@) {
 						warn "Error occured :", Data::Dumper::Dumper($method, $args, $err);
-						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>%h);
+						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>\%h);
 					} 
 				};
 			} elsif($request->[0] eq 'POST') { 
@@ -166,7 +166,7 @@ sub new {
 				$page =~ s|^/+||gs;
 				$page =~ s|[\./-]|_|sg;
 				$page ||= 'main';
-				if (my $func = $self->can("page_$page")) { 
+ 				if (my $func = $self->can("page_$page")) { 
 					eval { 
 						$func->($request, undef, sub {
 							$request->reply(@_);
