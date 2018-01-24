@@ -28,7 +28,7 @@ sub start_script {
     };
 }
 sub daemonize { 
-    my ($name,$user,$group) = @_;
+    my ($name, $user, $group, $logdir) = @_;
     my $pidfile = "/tmp/$name.pid";
     if($ARGV[0] eq 'stop' || $ARGV[0] eq 'restart') { 
         my $pid = (-f $pidfile) ? File::Slurp::read_file($pidfile) : undef;
@@ -48,18 +48,44 @@ sub daemonize {
             exit(0);    
         }
     }
-    openlog($name, "perror,pid,ndelay", "local0");    # don't forget this
 
-    $SIG{__WARN__} = sub { 
-        syslog('info', join(' ', @_));
+	my $log;
+	my $logfile;
+	if($logdir) { 
+		$logfile = "$logdir/$name.log";
+		open($log, '>>', $logfile) || die("Cannot open $logfile: $!");
+		select $log; $|=1;
+	} else { 
+		openlog($name, "perror,pid,ndelay", "local0");    # don't forget this
+	}
+
+	my $dolog = sub {
+		if($logdir) { 
+	        my @t=localtime(time);
+        	my $str = join(' ', @_);
+    	    if($str !~ /\n$/) { $str.="\n"; }
+	        print $log sprintf("[%04d-%02d-%02d %02d:%02d:%02d][$$] ", $t[5]+1900,$t[4]+1,$t[3],$t[2],$t[1],$t[0]).$str;
+		} else { 
+			syslog('info', join(' ', @_));
+		}
     };
+
+    $SIG{__WARN__} = $dolog;
 
     $SIG{__DIE__} = sub { 
-        syslog('crit', join(' ', @_));
-        syslog('crit', 'at '.Devel::StackTrace->new()->as_string);
-        exit(1);
+		if($logdir) { 
+			$dolog->(@_);
+		} else { 
+	        syslog('crit', join(' ', @_));
+    	    syslog('crit', 'at '.Devel::StackTrace->new()->as_string);
+		}
+		exit(1);
     };
     Net::Server::Daemonize::daemonize($user || 'nobody',$group || 'nogroup', $pidfile);
+	if($logdir) { 
+    	open(STDOUT, '>>', $logfile) || die("Cannot open $logfile: $!");  # "Daemonize" redirects stderr to stdout and stdout to /dev/null
+		open(STDERR, '>>', $logfile) || die("Cannot open $logfile: $!");  # "Daemonize" redirects stderr to stdout and stdout to /dev/null
+	}
 }
 
 sub read_config { 
