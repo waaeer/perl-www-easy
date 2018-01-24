@@ -279,6 +279,20 @@ sub makeTemplatePage {
  
 sub runTemplate {
     my ($template, $opt) = @_;
+	if(ref($template) eq 'ARRAY') { 
+		my $dir = $R->dir_config('CUSTOM_TEMPATES') || $R->dir_config('TEMPLATES');
+		my $ok;
+		foreach my $t (@$template) { 
+			warn "search in $dir/$t\n";
+			if(-f "$dir/$t.ctpp") { 
+				$ok = $t; last;
+			}
+		}
+		warn "found: $ok\n";
+		if($ok) { $template = $ok; } 
+			else { return 404; } 
+	}
+
     my $obj ## devel! = $templateCache{$template}  ## do not autoreread if cache on!
                 ||= $CTPP->parse_template("$template.ctpp");
         if(!$obj) { 
