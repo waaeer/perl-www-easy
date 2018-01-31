@@ -121,6 +121,9 @@ sub handler {
         return 404;
   };
   if($@) {
+		if (ref($@) && $@->{code}) { 
+			return $@->{code};
+		}
         warn "executing request failed: $@";
         return 500;
   }
