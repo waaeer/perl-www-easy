@@ -225,7 +225,7 @@ sub checkToken {
 	my $token = $headers->{'cookie+'.$name} || return undef;
 	$token =~ s/^$name=//;
     my $ipaddr = $headers->{'x-real-ip'};
-warn "check token $token for $ipaddr\n";
+#warn "check token $token for $ipaddr\n";
     return WWW::Easy::Auth::_check_token ($name, $token, $ipaddr, $ttl, $secret);
 }
 
