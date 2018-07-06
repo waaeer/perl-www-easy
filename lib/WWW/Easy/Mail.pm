@@ -205,7 +205,7 @@ sub send {
 		Port => $self->{port},
 		SSL  => $self->{ssl},
 		Hello => $self->{hello},
-	) || die("Cannot connect SMTP server $self->{host}:$self->{port} with ssl=$self->{ssl}");
+	) || die("Cannot connect SMTP server $self->{host}:$self->{port} with ssl=$self->{ssl}: $@");
 	if($self->{username}) { 
 		my $ok = $smtp->auth( $self->{username}, $self->{password});
 		if(!$ok) { 
