@@ -59,23 +59,33 @@ sub new {
 								return;
 							}
 						}
-						my $func = $class->can("api_$method");
-						if($func) { 
-							my %context=(srv=>$self);
-							$func->($args, $user_id, sub { 
-								my ($ret, %opt) = @_;
-								my %addh = $opt{headers} ? %{$opt{headers}} : ();
-								if($opt{logout}) { 
-									$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
-								} elsif( my $user_id = $opt{set_user_token})  {
-									$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
-								}
-#								warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
-								$request->replyjs(200, $ret , headers=>{  %h, %addh });
-							}, \%context);
-						} else { 
+						my $check = $class->can("can_api_$method");
+						my $func  = $class->can("api_$method");
+						if(!$func) {
 							warn "Unknown method $method";
 							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
+						}
+						my %context;
+						my $ok_cb = sub { 
+							my ($ret, %opt,$action) = @_;
+							my %addh = $opt{headers} ? %{$opt{headers}} : ();
+							if($opt{logout}) { 
+								$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
+							} elsif( my $user_id = $opt{set_user_token})  {
+								$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
+							}
+	#						warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
+							$request->replyjs(200, $ret , headers=>{  %h, %addh });
+						};
+						if($check) { 
+							$check->($args, $user_id, sub { 
+								$func->($args, $user_id, $ok_cb, \%context);								
+							}, \%context, sub {
+								my $err = shift;
+								return $request->replyjs(500, {error=>$err, ($opt{return_error} ? (detail=>$err) :() )}, headers=>\%h);
+							});
+						} else {
+							$func->($args, $user_id, $ok_cb, \%context);
 						}
 					};
 					$SIG{__DIE__} = $diehandler;
