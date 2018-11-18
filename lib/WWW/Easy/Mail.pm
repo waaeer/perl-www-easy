@@ -93,7 +93,7 @@ sub send {
 	my %opt = @_;
 	my $mailer = $opt{mail_client};
 	my $class = "WWW::Easy::Mail::".$mailer->{mailer};
-	if ($mailer->{mailer} !~ /^SMTP$/) { 
+	if ($mailer->{mailer} !~ /^(SMTP)$/) { 
 		die("Unknown mailer $mailer->{mailer}");
 	}
 
@@ -189,7 +189,6 @@ sub _enquote {
 	else { return qq!"$x"!; }  
 }
 
-
 package WWW::Easy::Mail::SMTP;
 use Net::SMTP;
 use IO::Socket::SSL;
@@ -247,8 +246,12 @@ sub send {
 		return;
 	}
 	$smtp->data(Encode::encode_utf8($message->as_string));
+	my $message = $smtp->message;
 	warn "Result: ".$smtp->message;
 	$smtp->quit;
+	if($message =~ /Error/) {
+		die $message;
+	}
 	
 }
 1;
