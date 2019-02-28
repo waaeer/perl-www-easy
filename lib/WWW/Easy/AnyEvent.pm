@@ -64,6 +64,7 @@ sub new {
 						if(!$func) {
 							warn "Unknown method $method";
 							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
+							return;
 						}
 						my %context;
 						my $ok_cb = sub { 
