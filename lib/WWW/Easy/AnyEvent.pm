@@ -109,7 +109,7 @@ sub new {
                       	return;
                     }
 				}
-				if ($request->[2]->{'content-type'} eq 'application/x-www-form-urlencoded') {
+				if ($request->[2]->{'content-type'} =~ m|^application/x-www-form-urlencoded|) {
 					my $func = $self->can("post_$uri");
 					return {
 							form => $func ? sub {
