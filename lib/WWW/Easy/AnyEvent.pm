@@ -55,7 +55,7 @@ sub new {
 							warn "got user=$user_id\n" if $verbose;
 							if(!$user_id) { 
 								warn "must auth\n";
-								$request->replyjs(200, {must_authenticate=>1}, {headers=>\%h});
+								$request->replyjs(200, {must_authenticate=>1}, headers=>\%h);
 								return;
 							}
 						}
@@ -105,7 +105,7 @@ sub new {
 					warn "got user=$user_id\n" if $verbose;
                     if(!$user_id) { 
                     	warn "must auth\n" if $verbose;
-                        $request->reply(400, 'Must authenticate for this POST', {headers=>\%h});
+                        $request->reply(400, 'Must authenticate for this POST', headers=>\%h);
                       	return;
                     }
 				}
@@ -231,10 +231,10 @@ sub checkToken {
 }
 
 sub url_escape { 
-        my $x = $_[0];
-        use bytes;
-        $x=~s/([^0-9a-zA-Z])/sprintf("%%%02x",ord($1))/gsex;
-        return $x;
+    my $x = $_[0];
+    use bytes;
+    $x=~s/([^0-9a-zA-Z])/sprintf("%%%02x",ord($1))/gsex;
+    return $x;
 }
 
 1;
