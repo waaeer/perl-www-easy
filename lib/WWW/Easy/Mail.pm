@@ -101,6 +101,7 @@ sub send {
 	my $message = _build(\%opt);
 #	print $message->as_string."\n";
 	$client->send($message, \%opt);
+	return $message->head->get('Message-ID');
 }
 
 sub _serialize_addr { 

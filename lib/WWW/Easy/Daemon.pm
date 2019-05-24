@@ -9,7 +9,7 @@ use Devel::StackTrace;
 use Pod::Usage;
 
 our @ISA    = qw(Exporter);
-our @EXPORT = qw(start_script read_config pod2usage daemonize);
+our @EXPORT = qw(start_script read_config pod2usage daemonize easy_try);
 ######################## некие полезные функции для скриптов
 sub start_script { 
     if ( my $pid = Proc::PID::File->running({dir=>'/tmp', verify=>1}) ) {
@@ -94,6 +94,19 @@ sub read_config {
     -r $config_file or pod2usage (-msg=>"Config file $config_file is not readable");
 
     return decode_json(File::Slurp::read_file($config_file) || pod2usage(-msg=>"Config file $config_file empty"));
+}
+
+sub easy_try(&) {
+	my $func = shift;
+	my $diehandler = $SIG{__DIE__};
+	local	$SIG{__DIE__} = undef;
+	if(wantarray) { 
+		my @f = eval { &$func; } ;
+		return @f;
+	} else { 
+		my $f = eval { &$func; } ;
+		return $f;
+	}
 }
 
 1;

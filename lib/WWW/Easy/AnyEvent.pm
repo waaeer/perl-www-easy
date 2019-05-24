@@ -78,7 +78,7 @@ sub new {
 	#						warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
 							$request->replyjs(200, $ret , headers=>{  %h, %addh });
 						};
-						if($check) { 
+						if($check) {
 							$check->($args, $user_id, sub { 
 								$func->($args, $user_id, $ok_cb, \%context);								
 							}, \%context, sub {
