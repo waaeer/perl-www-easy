@@ -1,2 +1,2 @@
 # perl-www-easy
-Extra minimalistic mod_perl based web framework
+Extra minimalistic mod_perl and AnyEvent::HTTP::Server based web framework
