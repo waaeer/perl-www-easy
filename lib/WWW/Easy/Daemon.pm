@@ -98,7 +98,7 @@ sub read_config {
 
 sub easy_try(&) {
 	my $func = shift;
-	my $diehandler = $SIG{__DIE__};
+
 	local $SIG{__DIE__} = undef;
 	if(wantarray) { 
 		my @f = eval { &$func; } ;
