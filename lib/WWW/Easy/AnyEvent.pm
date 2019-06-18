@@ -19,6 +19,7 @@ sub new {
 		%opt,
 		cb => sub {
 			my $request = shift;
+			warn "Request: $request->[0] $request->[1]\n" if $verbose;
 			my %h = (connection=>'close');
 			if ($request->[1] =~ m|^${apiprefix}/([-\w]+)|) { 
 				my $method = $1;

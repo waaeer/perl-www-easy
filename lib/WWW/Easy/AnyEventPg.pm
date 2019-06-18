@@ -21,7 +21,7 @@ sub db_connect {
 			warn "Connection error $connect_opts->{user}\@$connect_opts->{host}:$connect_opts->{port}/$connect_opts->{dbname}\n";
 			if($pool->is_dead) { 
 				warn "Pool is dead\n";
-				connect_db(\$dbhp, $connect_opts, $pool_opts); # vivat the pool!
+				db_connect(\$dbhp, $connect_opts, $pool_opts); # vivat the pool!
 			}
    		},
 	);	
