@@ -93,7 +93,7 @@ sub send {
 	my %opt = @_;
 	my $mailer = $opt{mail_client};
 	my $class = "WWW::Easy::Mail::".$mailer->{mailer};
-	if ($mailer->{mailer} !~ /^(SMTP)$/) { 
+	if ($mailer->{mailer} !~ /^(SMTP|Sendmail)$/) { 
 		die("Unknown mailer $mailer->{mailer}");
 	}
 
@@ -132,6 +132,7 @@ sub _build {
 	my $subject= $opt->{subject};
 
 	my %email_header = (
+		%{ $opt->{headers} || {} },
 		Top => 1,
 		Subject => encode('MIME-Header', _2u($subject)),
 		To      => _serialize_addr($to),
@@ -191,6 +192,35 @@ sub _enquote {
 	if(/^"(.*)"$/) { return $x; } 
 	else { return qq!"$x"!; }  
 }
+
+sub _sender { 
+	my $opt = shift;
+	return ref($opt->{from}) eq 'ARRAY' ? $opt->{from}->[0] : $opt->{from};
+}
+sub _recipients {
+	my $opt = shift;
+	my @recipients;
+	if(my $to = $opt->{to}) { 
+		if(ref($to) eq 'ARRAY') { 
+			push @recipients,  map { 
+				ref($_) eq 'ARRAY' ? $_->[0] : $_
+			} @$to;
+		} else { 
+			push @recipients, $to;
+		}
+	}
+	if(my $to = $opt->{cc}) { 
+		if(ref($to) eq 'ARRAY') { 
+			push @recipients,  map { 
+				ref($_) eq 'ARRAY' ? $_->[0] : $_
+			} @$to;
+		} else { 
+			push @recipients, $to;
+		}
+	}
+	return \@recipients;
+}
+
 
 package WWW::Easy::Mail::SMTP;
 use Net::SMTP;
@@ -257,4 +287,31 @@ sub send {
 	}
 	
 }
+
+package WWW::Easy::Mail::Sendmail;
+sub new {
+	my ($class, %opt) = @_;
+	return bless {%opt}, $class;
+}
+
+sub send { 
+	my ($self, $message, $opt) = @_;
+	local(*SM);
+	my $sender     = WWW::Easy::Mail::_sender($opt);
+	my $recipients = WWW::Easy::Mail::_recipients($opt);
+	if(!@$recipients) { 
+		warn("No recipients");
+		return;
+	} 
+	foreach my $recipient (@$recipients) {
+		my $sendmail_pid = open(SM, '|-') // die("Cannot fork: $!");
+		if(!$sendmail_pid) { # in child
+			exec('/usr/sbin/sendmail', '-G', '-i', '-f', $sender, '--', $recipient);
+		}
+		print SM $message->as_string;
+		close(SM) // die("Cannot close pipe to sendmail: $!");
+		waitpid $sendmail_pid, 0;
+	}
+}
+
 1;
