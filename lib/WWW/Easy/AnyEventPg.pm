@@ -21,7 +21,7 @@ sub db_connect {
 			warn "Connection error $connect_opts->{user}\@$connect_opts->{host}:$connect_opts->{port}/$connect_opts->{dbname}\n";
 			if($pool->is_dead) { 
 				warn "Pool is dead\n";
-				connect_db(\$dbhp, $connect_opts, $pool_opts); # vivat the pool!
+				db_connect(\$dbhp, $connect_opts, $pool_opts); # vivat the pool!
 			}
    		},
 	);	
@@ -92,7 +92,15 @@ sub to_json {
 }
 sub from_json { 
 	my $res = shift;
-	return $res ? JSON::XS::decode_json(Encode::encode_utf8($res)) : undef;
+       if($res) {
+                my $ret = WWW::Easy::Daemon::easy_try { JSON::XS::decode_json(Encode::encode_utf8($res)) };
+                if($@) { 
+                        warn "bad json $res: $@\n";
+                        return undef;
+                }
+                return $ret;
+        }
+        return undef;   
 }
 sub to_intarray {
 	my $ids = shift;
@@ -112,8 +120,8 @@ sub from_intarray {
 sub process_json_result { 
 	my $res = shift;
 	return wantarray 
-		? ( map { from_json($_) } @{($res->rows)[0]} )
-		:         from_json(        ($res->rows)[0]->[0] );
+		? ( map { from_json($_) || {null=>1} } @{($res->rows)[0]} )
+		: (       from_json(                     ($res->rows)[0]->[0]) || {null=>1} );
 }
 
 sub db_transaction {
