@@ -55,7 +55,7 @@ sub new {
 							$user_id = $self->checkToken($request,'u',86400,$KEY);
 							warn "got user=$user_id\n" if $verbose;
 							if(!$user_id) { 
-								warn "must auth\n";
+								warn "must auth for $method\n";
 								$request->replyjs(200, {must_authenticate=>1}, headers=>\%h);
 								return;
 							}
