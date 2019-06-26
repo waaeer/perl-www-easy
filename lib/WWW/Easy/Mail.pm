@@ -11,52 +11,62 @@ sub _get_boundary {
 	return sprintf('----_=_NextPart_%04i_%lx',int(rand(2e9)),time);
 }
 
+sub __build { 
+	my ($opt) = @_;
+	my $e = MIME::Entity->build(%$opt);
+	if(my $irt = $opt->{'In-Reply-To'}) { 
+		$e->replace('In-Reply-To', $irt);
+	}
+	return $e;
+}
+	
+
 sub _build_text {
 	my ($opt, $headers) = @_;
-	return MIME::Entity->build(
+	return __build({
 		Top         => 0,
 		%$headers,
 		Type        => qq[text/plain; charset="utf-8"],
 		Data        => _u2($opt->{text}),
 		Encoding    => 'quoted-printable',
 		Disposition => undef,
-	);
+	});
 }
 
 sub _build_html { 
 	my ($opt, $headers) = @_;
-	return MIME::Entity->build (
+	return __build ({
 		Top         => 0,
 		%$headers,
 		Type        => qq[text/html; charset="utf-8"],
 		Data        => _u2($opt->{html}),
 		Encoding    => 'quoted-printable',
 		Disposition => undef,
-	);
+	});
 }
 
 sub _build_html_with_inline {
 	my ($opt, $headers) = @_;
 	if (my $imgs = $opt->{inline})  { 
-		my $cont = MIME::Entity->build(
+		my $cont = __build({
 			Top         => 0,
 			%$headers,
             Type        => q[multipart/related],
             Boundary    => _get_boundary(),
             Encoding    => 'binary',
 			"X-Mailer"  => undef,
-        );
+        });
 		$cont->add_part(_build_html($opt, {}));
 		foreach my $img (@$imgs) { 
 			my $type = File::Type->new()->mime_type($img);
-			$cont->add_part( MIME::Entity->build (
+			$cont->add_part( __build ({
 				Type     => $type,
 				Top      => 0,
 				Encoding => 'base64',
 				Disposition => 'inline',
 				'Content-ID'=> '<'.basename($img).'>',
 				Path     => $img
-			));
+			}));
 		}
 		return $cont;		
 	} else { 
@@ -68,14 +78,14 @@ sub _build_text_and_html {
 	my ($opt, $headers) = @_;
 	my $main;
 	if($opt->{text} && $opt->{html}) { 
-		$main = MIME::Entity->build (
+		$main = __build ({
 			Top        => 0,
 			%$headers,
 			Type        => q[multipart/alternative],
             Boundary    => _get_boundary(),
             Encoding    => 'binary',
 			"X-Mailer"  => undef,
-        );
+        });
 		$main->add_part( _build_text($opt, {}));
 		$main->add_part( _build_html_with_inline($opt, {}));
 	} elsif ($opt->{text} && ! $opt->{html}) { 
@@ -145,13 +155,13 @@ sub _build {
 	);
 #	warn Data::Dumper::Dumper('header', \%email_header);
 	if(my $files = $opt->{attachment}) { 
-		my $cont = MIME::Entity->build (
+		my $cont = __build ({
 			%email_header,
 			Type    	=> q[multipart/mixed],
 			Boundary    => _get_boundary(),
 			Encoding    => 'binary',
 			"X-Mailer"  => undef,
-		);
+		});
 		$cont->add_part(_build_text_and_html($opt, {}));
 		foreach my $f (@$files) { 
 			$cont->attach(
