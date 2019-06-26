@@ -53,6 +53,8 @@ sub db_query {
 					if($err =~ /^\{/) { # если начинается на { - это JSON
 						$user_error = ::easy_try { _extract_json_prefix($err) } || 'Incorrect JSON error message';
 					}
+				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
+					$user_error = { error => 'integrity', table => $3 };
 				}
 warn "in error proc ecb=$err_cb\n";
 				if($err_cb && ref($err_cb) eq 'CODE') {
