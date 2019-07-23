@@ -56,7 +56,7 @@ sub db_query {
 				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
 					$user_error = { error => 'integrity', table => $3 };
 				}
-warn "in error proc ecb=$err_cb\n";
+#warn "in error proc ecb=$err_cb\n";
 				if($err_cb && ref($err_cb) eq 'CODE') {
 					return $err_cb->($user_error, $errmsg);
 				} elsif($err_cb) { 
