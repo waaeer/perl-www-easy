@@ -1,6 +1,7 @@
 lib/WWW/Easy.pm
 lib/WWW/Easy/Auth.pm
 lib/WWW/Easy/AnyEvent.pm
+lib/WWW/Easy/AnyEventPg.pm
 lib/WWW/Easy/Daemon.pm
 lib/WWW/Easy/Mail.pm
 lib/WWW/Easy/SPI.pm
