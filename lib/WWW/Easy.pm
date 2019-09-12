@@ -20,13 +20,13 @@ use POSIX qw(modf);
 use Time::HiRes;
 
 use WWW::Easy::Auth;
-our $VERSION = "0.7";
+our $VERSION = "0.8";
 
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);
 our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME $CTPP
 	makeTemplatePage htmlPage xmlPage e404 e500 e403 redirect url_escape ajax u2 removeTags
-	request_content no_cache runTemplate
+	request_content no_cache runTemplate from_json to_json
 );
 
 BEGIN { 
@@ -114,7 +114,7 @@ sub handler {
         }
         # nothing found ?
         if(my $handler = $handlers->{__default}) {
-#               warn "__default handler\n";
+               warn "__default handler\n";
                 return $handler->();
         } 
         $R->status(404);
@@ -196,10 +196,82 @@ sub ajax {
         $R->content_type('application/json');
 #       warn JSON::XS::encode_json(utfize($data));
         if($data) { 
-                $R->print(JSON::XS::encode_json($data));
+                $R->print(ref($data) ? JSON::XS::encode_json($data) : $data);  # if $data is a sclar, assume it is already JSON
         }
         return 200;
 }
+
+#################
+
+sub api { 
+	my %opt = @_;
+	
+	($R->headers_in->{'X-Requested-With'} eq 'XMLHttpRequest')  || return e404();
+	my $content;
+	my $length = $R->headers_in->{'Content-length'};
+	$R->read($content, $length) if $length;
+	my $data = $content ? JSON::XS::decode_json($content) : undef;
+	$TAIL =~ s|^/||g;
+	$TAIL =~ s|/+|/|g;
+	((my $funcname), $TAIL) = split('/', $TAIL, 2);
+	my $pkg = $opt{package} || (caller())[0];
+
+	if($opt{auth}) {  
+		my $key = $opt{auth}->{key} || die("No auth.key specified");
+		my $cookie = $opt{auth}->{cookie} || 'u';
+		if($funcname eq 'login') {
+			my $user = ($opt{auth}->{check_password} || die("No auth.check_password specified"))->($data->[0], $data->[1]);
+			if($user) { 
+				WWW::Easy::sendToken($R, $cookie, $user->{id}, $key);  
+    	        return ajax({ok=>1});
+			} else {
+				return ajax({must_authenticate=>1,reason=>'Bad'});
+			}
+		} elsif($funcname eq 'logout') { 
+			WWW::Easy::clearToken($R, $cookie);
+			return ajax({ok=>1});
+		}
+		my $user_id = WWW::Easy::checkToken($R, $cookie, 86400, $key);
+		my $user = $user_id ? ($opt{auth}->{get_user} || die("No auth.get_user specified"))->($user_id) : undef;
+		return ajax({must_authenticate=>1}) unless $user;
+		{ no strict 'refs';
+		  ${$pkg.'::USER' } = $user;
+		}
+	}
+
+	my $func = "api_$funcname";
+
+    if (my $code = $pkg->can($func)) {
+warn "WAO easy callls $func...\n";
+		my $ret = eval { &$code($data, {__package__=>$pkg}); };
+warn "WAO after eval\n";
+
+		if (my $err = $@) {  # error!
+			my $user_error = 'Internal error';
+			warn "internl error = '$err'\n";
+			if($err =~ /^DBD::Pg::db (\w+) failed: ERROR:\s+ORM:\s*(.*)$/s) {
+				warn "JSON ORM error\n";
+				$err = $2;
+				if($err =~ /^\{/) { # если начинается на { - это JSON
+					$user_error = eval { _extract_json_prefix($err) } || 'Incorrect JSON error message';
+				} else { 
+					$user_error = $err;
+				}
+			} elsif ($err =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
+			warn "Ref error\n";
+				$user_error = { error => 'integrity', table => $3 };
+			} else { 
+				warn "other error [$err]\n";
+			}
+			return ajax({error=>$user_error});
+		}
+		return ajax($ret);
+	} else { 
+		return e404("func $func not found");
+	} 
+}
+
+
 ############################################### auth ########################
 sub checkToken {
         my ($r, $name, $ttl, $secret) = @_;
@@ -341,6 +413,17 @@ sub u2 {
     if(utf8::is_utf8($txt)) { return $txt; }
     return Encode::decode_utf8($txt);
 }
+sub from_json { 
+	return JSON::XS::decode_json(Encode::encode_utf8(shift));
+}
+sub to_json { 
+	return Encode::decode_utf8(JSON::XS::encode_json(shift));
+}
+sub _extract_json_prefix { 
+    my $res = shift;
+    return $res ? (JSON::XS->new->decode_prefix(Encode::encode_utf8($res)))[0] : undef;
+}
+
 
 sub removeTags { 
     my ($txt) = @_;

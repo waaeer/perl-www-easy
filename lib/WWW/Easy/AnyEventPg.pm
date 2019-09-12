@@ -47,7 +47,7 @@ sub db_query {
 				warn "RES STATUS=".$res->status." in ".(ref($query) eq 'ARRAY' ? join(', ', @$query) : $query )."\n";
 				my $errmsg = $res->errorMessage;
 				warn "ERROR '$errmsg' cb=$err_cb\n";
-				my $user_error = 'SQL Error';
+				my $user_error = 'Internal error';
 				if($errmsg =~ /^ERROR:\s+ORM:\s*(.*)$/s) {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
