@@ -242,9 +242,7 @@ sub api {
 	my $func = "api_$funcname";
 
     if (my $code = $pkg->can($func)) {
-warn "WAO easy callls $func...\n";
 		my $ret = eval { &$code($data, {__package__=>$pkg}); };
-warn "WAO after eval\n";
 
 		if (my $err = $@) {  # error!
 			my $user_error = 'Internal error';

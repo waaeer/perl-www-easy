@@ -34,7 +34,6 @@ sub api_txn {
 		}
 		$dbh->commit;
 	};
-warn "TXN finished with $@\n";
 	if($@) { 
 		my $err = $@;
 		local $dbh->{RaiseError} = 0;
