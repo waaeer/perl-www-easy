@@ -10,8 +10,10 @@ sub connect {
 		RaiseError => 1, 
 		PrintError => 1,
 		AutoCommit => 1,
-		pg_enable_ut8 => 1,
+		pg_enable_utf8 => 1,
+		pg_bool_tf => 0,   
 	}) ||  die $DBI::errstr;
+
 }
 
 sub api_txn {
@@ -34,7 +36,6 @@ sub api_txn {
 		}
 		$dbh->commit;
 	};
-warn "TXN finished with $@\n";
 	if($@) { 
 		my $err = $@;
 		local $dbh->{RaiseError} = 0;
