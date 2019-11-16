@@ -114,7 +114,6 @@ sub handler {
         }
         # nothing found ?
         if(my $handler = $handlers->{__default}) {
-               warn "__default handler\n";
                 return $handler->();
         } 
         $R->status(404);

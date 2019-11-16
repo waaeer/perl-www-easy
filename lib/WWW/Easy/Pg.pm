@@ -40,7 +40,7 @@ sub api_txn {
 		my $err = $@;
 		local $dbh->{RaiseError} = 0;
 		$dbh->rollback;
-		warn $@;
+#		warn " api_txn caught error: ".$@;
 		die $@; # sub api() will do:	return {error=>'API Transaction error'};	
 	} else { 
 		return {result=>\@res};
