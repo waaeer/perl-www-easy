@@ -214,9 +214,10 @@ sub api {
 	$TAIL =~ s|/+|/|g;
 	((my $funcname), $TAIL) = split('/', $TAIL, 2);
 	my $pkg = $opt{package} || (caller())[0];
+	my %openApi = map { $_=>1 } ($opt{open_api} ? @{$opt{open_api}} : ());
 
-	if($opt{auth}) {  
-		my $key = $opt{auth}->{key} || die("No auth.key specified");
+	if($opt{auth} ) {  
+		my $key    = $opt{auth}->{key} || die("No auth.key specified");
 		my $cookie = $opt{auth}->{cookie} || 'u';
 		if($funcname eq 'login') {
 			my $user = ($opt{auth}->{check_password} || die("No auth.check_password specified"))->($data->[0], $data->[1]);
@@ -232,7 +233,9 @@ sub api {
 		}
 		my $user_id = WWW::Easy::checkToken($R, $cookie, 86400, $key);
 		my $user = $user_id ? ($opt{auth}->{get_user} || die("No auth.get_user specified"))->($user_id) : undef;
-		return ajax({must_authenticate=>1}) unless $user;
+		if(!$user  && ! $openApi{$funcname}) { 
+			return ajax({must_authenticate=>1});
+		}
 		{ no strict 'refs';
 		  ${$pkg.'::USER' } = $user;
 		}
