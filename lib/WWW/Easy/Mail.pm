@@ -314,11 +314,14 @@ sub send {
 		return;
 	} 
 	foreach my $recipient (@$recipients) {
+		if(! -x '/usr/sbin/sendmail') { 
+			die("No sendmail executable found\n");
+		}
 		my $sendmail_pid = open(SM, '|-') // die("Cannot fork: $!");
 		if(!$sendmail_pid) { # in child
 			exec('/usr/sbin/sendmail', '-G', '-i', '-f', $sender, '--', $recipient);
 		}
-		print SM $message->as_string;
+		print SM $message->as_string or die("Cannot write to sendmail: $!");
 		close(SM) // die("Cannot close pipe to sendmail: $!");
 		waitpid $sendmail_pid, 0;
 	}
