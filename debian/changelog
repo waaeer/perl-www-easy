@@ -1,3 +1,10 @@
+
+libwww-wast-perl (0.8-1) unstable; urgency=medium
+
+  * Multiple improvements
+
+ -- Ivan Panchenko <wao@mail.ru>  Fri, 27 Dec 2019 00:07:06 +0300
+
 libwww-easy-perl (0.7-1) unstable; urgency=medium
 
   * Mail sending library
