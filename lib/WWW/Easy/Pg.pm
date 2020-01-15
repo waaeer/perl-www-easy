@@ -1,18 +1,20 @@
 package WWW::Easy::Pg;
 use strict;
 use base 'Exporter';
-use DBI;
+use DBI::Ext;
 our @EXPORT=qw(api_txn);
 
 sub connect {
 	my $r = shift;
-	return DBI->connect($r->dir_config('DSN'), $r->dir_config('DBUSER') || 'httpd', $r->dir_config('DBPASSWORD'), {
-		RaiseError => 1, 
-		PrintError => 1,
-		AutoCommit => 1,
-		pg_enable_utf8 => 1,
-		pg_bool_tf => 0,   
-	}) ||  die $DBI::errstr;
+	return DBI::Ext->new(
+		dsn      => $r->dir_config('DSN'), 
+		user     => $r->dir_config('DBUSER') || 'httpd',
+		password => $r->dir_config('DBPASSWORD'),
+		attr     => { 
+			pg_enable_utf8 => 1,
+			pg_bool_tf => 0,   
+		}
+	);
 
 }
 
@@ -20,11 +22,11 @@ sub api_txn {
 	my ($list, $context) = @_;
 	my (@res, $dbh);
 	{ no strict 'refs';
-	  $dbh = ${$context->{__package__}.'::DBH'} || die("api_txn cannot detrermine DBH from package $context->{__package__}");
+	  $dbh = ${$context->{__package__}.'::DBH'} || die("api_txn cannot determine DBH from package $context->{__package__}");
 	}
-	$dbh->{RaiseError} = 1;
-	eval { 
-		$dbh->begin_work;
+	$context->{in_transaction} = 1;
+
+	$dbh->transaction( sub { 
 		foreach my $op (@$list) { 
 			my $method = shift @$op;
 			my $func = "api_$method";
@@ -34,13 +36,9 @@ sub api_txn {
     			die("func $func not found");
 	        }
 		}
-		$dbh->commit;
-	};
+		return 1;
+	});
 	if($@) { 
-		my $err = $@;
-		local $dbh->{RaiseError} = 0;
-		$dbh->rollback;
-#		warn " api_txn caught error: ".$@;
 		die $@; # sub api() will do:	return {error=>'API Transaction error'};	
 	} else { 
 		return {result=>\@res};
