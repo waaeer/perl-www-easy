@@ -395,15 +395,15 @@ sub xmlPage {
 }
 
 sub e404 {
-        warn @_;
+        warn @_ if @_ && $_[0];
         return 404;
 }
 sub e500 {
-        warn @_;
+        warn @_ if @_ && $_[0];
         return 500;
 }
 sub e403 {
-        warn @_;
+        warn @_ if @_ && $_[0];
         return 403;
 }
 
