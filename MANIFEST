@@ -4,6 +4,7 @@ lib/WWW/Easy/AnyEvent.pm
 lib/WWW/Easy/AnyEventPg.pm
 lib/WWW/Easy/Daemon.pm
 lib/WWW/Easy/Mail.pm
+lib/WWW/Easy/Pg.pm
 lib/WWW/Easy/SPI.pm
 Makefile.PL
 debian/changelog
@@ -14,6 +15,7 @@ debian/libwww-easy-perl.docs
 debian/rules
 debian/source/format
 debian/watch
+scripts/send_mail.pl
 MANIFEST
 LICENSE
 README.md

@@ -244,25 +244,39 @@ sub api {
 	my $func = "api_$funcname";
 
     if (my $code = $pkg->can($func)) {
-		my $ret = eval { &$code($data, {__package__=>$pkg}); };
+		my $context = { __package__ => $pkg };
+		if(my $before = $opt{before}) { 
+			$before->($func, $data, $context );
+		}
+		my $ret = eval { &$code($data, $context ); };
 		if (my $err = $@) {  # error!
 			my $user_error = 'Internal error';
-			warn "internl error = '$err'\n";
-			if($err =~ /^DBD::Pg::db (\w+) failed: ERROR:\s+ORM:\s*(.*)$/s) {
-				warn "JSON ORM error\n";
+			if($err =~ /^(DBD::Pg::db (?:\w+) failed: )?ERROR:\s+ORM:\s*(.*)$/s) {
 				$err = $2;
 				if($err =~ /^\{/) { # если начинается на { - это JSON
-					$user_error = eval { _extract_json_prefix($err) } || 'Incorrect JSON error message';
+					$user_error = eval { _extract_json_prefix($err) };
+					if($@) { 
+						warn "Incorrect JSON ($err): $@\n";
+						$user_error = 'Incorrect JSON error message';
+					}
+					warn "user_error = ".Data::Dumper::Dumper($user_error);
 				} else { 
 					$user_error = $err;
+					warn "user_error = $user_error\n";
 				}
 			} elsif ($err =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
-			warn "Ref error\n";
+				warn "Integrity error($3)\n";
 				$user_error = { error => 'integrity', table => $3 };
 			} else { 
 				warn "other error [$err]\n";
 			}
+			if(my $onerr = $opt{on_error}) {
+				$onerr->($context, $user_error);
+			}
 			return ajax({error=>$user_error});
+		}
+		if(my $onok = $opt{on_success}) {
+			$onok->($context, $ret);
 		}
 		return ajax($ret);
 	} else { 
@@ -395,15 +409,15 @@ sub xmlPage {
 }
 
 sub e404 {
-        warn @_ if @_ && $_[0];
+        warn @_ if $_[0];
         return 404;
 }
 sub e500 {
-        warn @_ if @_ && $_[0];
+        warn @_ if $_[0];
         return 500;
 }
 sub e403 {
-        warn @_ if @_ && $_[0];
+        warn @_ if $_[0];
         return 403;
 }
 
