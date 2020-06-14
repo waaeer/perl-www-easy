@@ -109,7 +109,7 @@ sub send {
 
 	my $client = $class->new(%{ $mailer->{mailer_args} });
 	my $message = _build(\%opt);
-#	print $message->as_string."\n";
+	warn "Sending: ".$message->as_string."\n" if $opt{dump_sent};
 	$client->send($message, \%opt);
 	my $msg_id = $message->head->get('Message-ID');
 	chomp($msg_id);

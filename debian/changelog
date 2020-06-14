@@ -5,7 +5,11 @@ libwww-easy-perl (0.9-1) unstable; urgency=medium
 
  -- Ivan Panchenko <wao@mail.ru>  Sun, 14 Jun 2020 22:18:06 +0300
 
-libwww-easy-perl (0.8-1) unstable; urgency=medium
+libwww-easy-perl (0.8-2) unstable; urgency=medium
+
+  * Output of mesage body in debug mode
+
+ -- Ivan Panchenko <wao@mail.ru>  Wed, 25 Mar 2020 18:09:06 +0300
 
   * Multiple improvements
 
