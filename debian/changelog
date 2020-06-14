@@ -1,3 +1,10 @@
+libwww-easy-perl (0.9-1) unstable; urgency=medium
+
+  * uses DBI::Ext instead of DBI
+  * http_date function to convert ISO or UNIX time to HTTP date format
+
+ -- Ivan Panchenko <wao@mail.ru>  Sun, 14 Jun 2020 22:18:06 +0300
+
 libwww-easy-perl (0.8-1) unstable; urgency=medium
 
   * Multiple improvements

@@ -1,3 +1,4 @@
+
 Source: libwww-easy-perl
 Section: perl
 Priority: optional
@@ -10,7 +11,7 @@ Homepage: https://metacpan.org/release/WWW-Easy
 Package: libwww-easy-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, libhtml-ctpp2-perl,
-  libdbi-ext-perl,
+  libdbi-ext-perl,libdate-calc-perl,
   libjson-xs-perl, libhtml-strip-perl,  libapache2-mod-perl2, libfile-type-perl,
   libapache2-mod-apreq2, libapache2-request-perl, libnet-server-perl, libfile-slurp-perl,
   libproc-pid-file-perl, libdevel-stacktrace-perl, libanyevent-http-server-ii-perl, libhash-merge-perl

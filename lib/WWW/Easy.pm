@@ -12,6 +12,7 @@ use Apache2::Log;
 use HTML::CTPP2;
 use JSON::XS;
 use Data::Dumper;
+use Date::Calc;
 use Digest::MD5;
 use Encode;
 use HTML::Strip;
@@ -26,7 +27,7 @@ use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);
 our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME $CTPP
 	makeTemplatePage htmlPage xmlPage e404 e500 e403 redirect url_escape ajax u2 removeTags
-	request_content no_cache runTemplate from_json to_json
+	request_content no_cache runTemplate from_json to_json http_date
 );
 
 BEGIN { 
@@ -137,6 +138,29 @@ sub eescape {
   my $x = shift;
   $x =~ s/(.)/sprintf("\\\\%03o",ord($1))/gse;
   return $x;
+}
+
+sub http_date { 
+  my $date = shift; # ISO8601
+  my ($y,$m,$d, $H,$M,$S, $TZ);
+  if($date =~ /^(\d+)-(\d+)-(\d+)[T\s](\d+):(\d+):(\d+(?:\.\d+)?)(\s*.*)?$/) {
+	($y,$m,$d, $H,$M,$S, $TZ) = ($1,$2,$3,$4,$5,$6,$7);
+	$TZ =~ s/^\s+|\s+$//g;
+	if($TZ=~ /^[\+\-]*\d\d$/) { 
+		$TZ="${TZ}00";
+	}
+  } elsif ($date =~ /^\d+$/) { # UNIX date
+	($S,$M,$H,$d,$m,$y) = gmtime($date);
+	$m+=1; $y+=1900;
+    $TZ="GMT";
+  }
+  if ($y) { 
+	return sprintf("%s, %02d %s %04d %02d:%02d:%02d %s", 
+			Date::Calc::Day_of_Week_Abbreviation(Date::Calc::Day_of_Week($y,$m,$d)),
+			 $d, Date::Calc::Month_to_Text($m), $y, $H, $M, $S, $TZ
+	);
+  }
+  return undef;
 }
 
 sub request_content { 
