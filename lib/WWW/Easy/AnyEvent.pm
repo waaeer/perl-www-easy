@@ -2,6 +2,7 @@ package WWW::Easy::AnyEvent;
 use common::sense;
 use EV;
 use WWW::Easy::Auth;
+use WWW::Easy::Daemon; # for easy_try only
 use AnyEvent::HTTP::Server;
 use JSON::XS;
 use base qw(AnyEvent::HTTP::Server);
@@ -41,8 +42,11 @@ sub new {
 #							warn "login $args->[0], $args->[1]\n";			 
 							$self->checkPassword( $args->[0], $args->[1], sub { 
 								my $user_id = shift;
-								$request->replyjs($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}, 
-									headers => { %h, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())},
+								$request->replyjs(
+									($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}), 
+									headers => {
+										%h, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())
+									},
 									## send token in headers
 								);
 							});
@@ -60,8 +64,8 @@ sub new {
 								return;
 							}
 						}
-						my $check = $class->can("can_api_$method");
-						my $func  = $class->can("api_$method");
+						my $check = $class->can("can_api_$method");   # (args, user_id, cb, context, error_cb) 
+						my $func  = $class->can("api_$method");       # (args, user_id, cb, context, error_cb)  cb не должно возвращать скаляр!
 						if(!$func) {
 							warn "Unknown method $method";
 							$request->replyjs(404, {error=>"Unknown method $method"}, headers=>\%h);
@@ -69,7 +73,7 @@ sub new {
 						}
 						my %context;
 						my $ok_cb = sub { 
-							my ($ret, %opt,$action) = @_;
+							my ($ret, %opt, $action) = @_;
 							my %addh = $opt{headers} ? %{$opt{headers}} : ();
 							if($opt{logout}) { 
 								$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
@@ -79,15 +83,19 @@ sub new {
 	#						warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
 							$request->replyjs(200, $ret , headers=>{  %h, %addh });
 						};
+						my $err_cb = sub { 
+							my $err = shift;
+							return $request->replyjs(500, {error=>$err, ($opt{return_error} ? (detail=>$err) :() )}, headers=>\%h);
+						};
 						if($check) {
 							$check->($args, $user_id, sub { 
-								$func->($args, $user_id, $ok_cb, \%context);								
-							}, \%context, sub {
+								$func->($args, $user_id, $ok_cb, $err_cb, \%context);
+							}, sub {
 								my $err = shift;
-								return $request->replyjs(500, {error=>$err, ($opt{return_error} ? (detail=>$err) :() )}, headers=>\%h);
-							});
+								$err_cb->($err);
+							}, \%context );
 						} else {
-							$func->($args, $user_id, $ok_cb, \%context);
+							$func->($args, $user_id, $ok_cb, $err_cb, \%context);
 						}
 					};
 					$SIG{__DIE__} = $diehandler;
@@ -201,6 +209,7 @@ sub new {
 
 sub run { 
 	my $s = shift;
+	$s->init;
 	$s->listen;
 	$s->accept;
 	my $sig = AE::signal INT => sub {
@@ -211,6 +220,8 @@ sub run {
 		});
 	};
 	EV::loop;
+}
+sub init {  # virtual function
 }
 
 sub makeToken { 

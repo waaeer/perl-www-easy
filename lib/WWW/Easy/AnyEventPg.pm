@@ -1,9 +1,12 @@
 package WWW::Easy::AnyEventPg;
 use strict;
-use AnyEvent::Pg::Pool;
+use AnyEvent::Pg::Pool; 
+use WWW::Easy::Daemon;  # for easy_try
 use base 'Exporter';
 # Postgres stuff for anyevent daemons
-our @EXPORT = qw(db_connect db_query db_transaction from_json to_json from_intarray to_intarray to_textarray process_json_result);
+our @EXPORT = qw(db_connect db_query db_query_rows db_query_json db_query_scalar db_query_row_hashes
+    db_transaction from_json to_json from_intarray to_intarray to_textarray process_json_result is_true
+);
 
 sub db_connect { 
 	my ($dbhp, $connect_opts, $pool_opts) = @_;
@@ -28,13 +31,15 @@ sub db_connect {
 }
 
 sub db_query { 
-	my ($dbh, $query, $cb, $err_cb) = @_;
+	my ($db, $query, $cb, $err_cb) = @_;
 	my $q;
-	$q = $dbh->push_query(
+#warn "WAO DB_QUERY (".(ref($query)? '['.join(', ', @$query).']' :$query).", $cb, $err_cb)\n";
+	$q = $db->push_query(
 		query     => $query,
 		on_result => sub  {
 			my $pg = shift;
 			my $conn = $pg->isa('AnyEvent::Pg::Pool') ? shift : $pg;
+			### почему это сделано? Если мы работаем с пулом, то параментры (pg,con,res); если с коннектом - внутри транзакции - то (pg,res);
 			my $res = shift;
 			my $status = $res->status;
 			undef $q;
@@ -51,36 +56,39 @@ sub db_query {
 				if($errmsg =~ /^ERROR:\s+ORM:\s*(.*)$/s) {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
-						$user_error = ::easy_try { _extract_json_prefix($err) } || 'Incorrect JSON error message';
+						$user_error = WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } || 'Incorrect JSON error message';
 					}
 				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
 					$user_error = { error => 'integrity', table => $3 };
 				}
-#warn "in error proc ecb=$err_cb\n";
-				if($err_cb && ref($err_cb) eq 'CODE') {
-					return $err_cb->($user_error, $errmsg);
-				} elsif($err_cb) { 
-					warn "Error callback is not CODE but $err_cb\n";
-#	                warn "Error callback is not CODE but $err_cb at ".$trace->as_string()."\n";
-    	        } else {
-					warn "No error callback specified\n";
-				}
-				return $cb->({ error => $user_error }); # last resort
+				return $err_cb->($user_error);
 			}
 		},
 		on_error => sub { 
 			warn "Error in db_query ".Data::Printer::np(@_);
-			if($err_cb && ref($err_cb) eq 'CODE') { 
-				return $err_cb->('Connection pool error');
-			} elsif($err_cb) { 
-				warn "Error callback is not CODE but $err_cb\n";
-			} else { 
-				warn "No error callback specified\n";
-			}
-			$cb->({error=>'Connection pool error'}); 
+			return $err_cb->('Database connection pool error');
         } 
 	);
 	return $q;
+}
+
+sub db_query_rows { 
+	my ($db, $query, $cb, $err_cb) = @_;
+	return db_query($db, $query, sub { $cb->([shift->rows]) }, $err_cb);
+}
+
+sub db_query_row_hashes { 
+	my ($db, $query, $cb, $err_cb) = @_;
+	return db_query ($db, $query, sub { $cb->([shift->rowsAsHashes]) }, $err_cb);
+}
+sub db_query_json { 
+	my ($db, $query, $cb, $err_cb) = @_;
+	return db_query ($db, $query, sub { $cb->(process_json_result($_[0])) }, $err_cb);
+}
+
+sub db_query_scalar { 
+	my ($db, $query, $cb, $err_cb) = @_;
+	return db_query ($db, $query, sub { $cb->((shift->rows)[0]->[0]) }, $err_cb);
 }
 
 sub _extract_json_prefix { 
@@ -119,6 +127,11 @@ sub from_intarray {
 	return [ split(',', $txt) ];
 }
 
+sub is_true { 
+	my $x = shift;
+	return ($x && $x ne 'f');
+}
+
 sub process_json_result { 
 	my $res = shift;
 	return wantarray 
@@ -155,7 +168,7 @@ sub db_transaction {
 	$run_one = sub {  # выполнить очередную команду из транзакции
 		my ($conn) = @_;
 		$context->{_pg} = $conn;
-		if(!(@$actions)) {
+		if(!(@$actions)) {  # Commit in nothing more to execute
 #			warn "committing txn\n"; 
 			push @queries, $conn->push_query(query=>'COMMIT', on_result=> $cb, on_error=>$in_error_cb);
 			return;
@@ -171,7 +184,7 @@ sub db_transaction {
 		my ($res, $pg, $conn) = @_;
 		$conn_to_rollback = $conn;
 		$run_one->($conn);		
-	}, undef, $in_error_cb );
+	}, $in_error_cb );
 	push @queries, $q;
 	return $q;
 
