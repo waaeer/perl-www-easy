@@ -66,7 +66,9 @@ sub handler {
         } else {
                 ($R, $APR, $URI) = ($r, Apache2::Request->new($r), $r->uri);
         }
-		$ARGS = scalar($APR->param());
+
+		my $args = $APR->param();
+		$ARGS = $args ? {%$args} : {} ;  # APR::Request::Param::Table to hash
 
 		$CTPP = $CTPPS{$template_dir};
 

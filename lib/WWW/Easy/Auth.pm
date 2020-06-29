@@ -17,18 +17,18 @@ sub _check_token {
         my ($key, $user_id, $time) = split('!', $token);
         my $now = time();
         if ($time > $now) {
-            warn "[AUTH \"$name\"] check_ticket error:  Suspect fake cookie: the time set in cookie is in future. Now: $now, cookie time: $time.";
+            warn "[AUTH \"$name\"] check_token error:  Suspect fake cookie: the time set in cookie is in future. Now: $now, cookie time: $time.";
             return undef;
         }
         my $key_should_be = _make_token_key($user_id, $time, $ipaddr, $secret);
         if ($key eq $key_should_be) {
             if ($ttl && ($now - $time) > $ttl ) {
-                warn "[AUTH \"$name\"] check_ticket error: Cookie $token expired: time=$time; now=$now";
+                warn "[AUTH \"$name\"] check_token error: Cookie $token expired: time=$time; now=$now";
                 return undef;
             }
             return $user_id;
         }
-		warn "[AUTH \"$name\"] check_ticket error: '$key' ne '$key_should_be'";
+		warn "[AUTH \"$name\"] check_token error: '$key' ne '$key_should_be'";
         return undef;
 }        
 
