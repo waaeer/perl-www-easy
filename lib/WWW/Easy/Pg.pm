@@ -22,7 +22,7 @@ sub api_txn {
 	my ($list, $context) = @_;
 	my (@res, $dbh);
 	{ no strict 'refs';
-	  $dbh = ${$context->{__package__}.'::DBH'} || die("api_txn cannot determine DBH from package $context->{__package__}");
+	  $dbh = $context->{dbh} || ${$context->{__package__}.'::DBH'} || die("api_txn cannot determine DBH from package $context->{__package__}");
 	}
 	$context->{in_transaction} = 1;
 
@@ -44,5 +44,6 @@ sub api_txn {
 		return {result=>\@res};
 	}
 }
+
 
 1;

@@ -1,3 +1,9 @@
+libwww-easy-perl (0.10-1) unstable; urgency=medium
+
+  * added ORM API for apache and AnyEvent::Pg
+
+ -- Ivan Panchenko <wao@mail.ru>  Wed, 1 Jul 2020 00:56:00 +0300
+
 libwww-easy-perl (0.9-1) unstable; urgency=medium
 
   * uses DBI::Ext instead of DBI
