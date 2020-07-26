@@ -44,19 +44,27 @@ sub db_query {
 			my $status = $res->status;
 			undef $q;
 
-			if($status eq 'PGRES_TUPLES_OK') {
-				return $cb->($res);
-			} elsif ($status eq 'PGRES_COMMAND_OK') {
-				return $cb->($res, $pg, $conn );  # needed in transaction
+			if($status eq 'PGRES_TUPLES_OK' or $status eq 'PGRES_COMMAND_OK') {
+				my $res = WWW::Easy::Daemon::easy_try { $cb->($res, $pg, $conn); } ;
+				if(my $err = $@) { 
+					if(ref($err)) {
+						warn "Callback ERROR: ".Data::Dumper::Dumper($err); 
+						return $err_cb->($err); 
+					} else {
+						warn "Callback ERROR: '$err'\n";
+						return $err_cb->('Internal error');
+					}
+				}		
+				return $@ ? $err_cb->($@) : $res;
 			} else { 
 				warn "RES STATUS=".$res->status." in ".(ref($query) eq 'ARRAY' ? join(', ', @$query) : $query )."\n";
 				my $errmsg = $res->errorMessage;
 				warn "ERROR '$errmsg' cb=$err_cb\n";
 				my $user_error = 'Internal error';
-				if($errmsg =~ /^ERROR:\s+ORM:\s*(.*)$/s) {
+				if($errmsg =~ /^ERROR:\s+(?:ORM:)?\s*(.*)$/s) {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
-						$user_error = WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } || 'Incorrect JSON error message';
+						$user_error = (WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } ) || 'Incorrect JSON error message';
 					}
 				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
 					$user_error = { error => 'integrity', table => $3 };
@@ -93,7 +101,7 @@ sub db_query_scalar {
 
 sub _extract_json_prefix { 
 	my $res = shift;
-	return $res ? (JSON::XS->new->decode_prefix(Encode::encode_utf8($res)))[0] : undef;
+	return $res ? (JSON::XS->new->utf8->decode_prefix( utf8::is_utf8($res) ? Encode::encode_utf8($res) : $res ))[0] : undef;
 }
 
 sub to_json { 
