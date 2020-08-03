@@ -19,7 +19,7 @@ sub api_mget {
 	my ($dbh, $user) = _get_dbh_and_user($context);
 	my ($nsp, $tbl) = ($tbl =~ /\./) ? split(/\./,$tbl) : ('public', $tbl);
 	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.mget($1::text, $2::text, $3::idtype, $4::int, $5::int, $6::jsonb)',
-		{}, $nsp, $tbl, $user->{id}, $page, $pagesize, WWW::Easy::to_json($query) );
+		{}, $nsp, $tbl, $user->{id}, $page, $pagesize, WWW::Easy::to_json($query || {} ) );
 	return WWW::Easy::from_json($r->[0]);
 }
 
