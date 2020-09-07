@@ -8,7 +8,6 @@ use Apache2::Connection;
 use Apache2::Cookie;
 use Apache2::Request;
 use Apache2::ServerRec;
-use Apache2::Log;
 use HTML::CTPP2;
 use JSON::XS;
 use Data::Dumper;
@@ -34,13 +33,19 @@ BEGIN {
 	$SIG{__WARN__} = sub {
 		my $t = Time::HiRes::time();
 		my ($s, $m, $h, $day, $mon, $year) = (localtime(int $t))[0 .. 5];
-		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), ($R && $R->server ? $R->server->server_hostname : 'NoServer') ), @_;
+		my $hostport = join ':', $R->get_server_name, $R->get_server_port;
+		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), $hostport
+			),
+			@_;
 	}
 }
 sub no_cache {
   $R->err_headers_out->add('Pragma', 'no-cache');
   $R->err_headers_out->add('Cache-control', 'no-cache,no-store');
   $R->err_headers_out->add('Expires', 'Mon, 10 Dec 2000 12:53:47 MSK');
+}
+sub init_handler {   # чтобы можно было пользоваться warn, необходимо инициализовать $R
+	$R=shift;
 }
 sub handler {
   my ($r, $handlers, $standalone_args, $abs_home, $tz, $vars) = @_;
