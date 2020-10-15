@@ -298,6 +298,9 @@ sub api {
 			} elsif ($err =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
 				warn "Integrity error($3)\n";
 				$user_error = { error => 'integrity', table => $3 };
+			} elsif ($err =~ /^ERROR:\s+range lower bound must be less than or equal to range upper bound/) { 
+				warn "Range bounds order error($3)\n";
+				$user_error = { error => 'range_bounds', table => $3 };
 			} else { 
 				warn "other error [$err]\n";
 			}
