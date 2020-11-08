@@ -290,6 +290,7 @@ sub api {
 						warn "Incorrect JSON ($err): $@\n";
 						$user_error = 'Incorrect JSON error message';
 					}
+					$Data::Dumper::Maxdepth = 3;
 					warn "user_error = ".Data::Dumper::Dumper($user_error);
 				} else { 
 					$user_error = $err;
@@ -468,7 +469,7 @@ sub to_json {
 }
 sub _extract_json_prefix { 
     my $res = shift;
-    return $res ? (JSON::XS->new->decode_prefix(Encode::encode_utf8($res)))[0] : undef;
+	return $res ? (JSON::XS->new->decode_prefix($res))[0] : undef;
 }
 
 
