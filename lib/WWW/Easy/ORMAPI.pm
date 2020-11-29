@@ -63,11 +63,11 @@ sub api_delete {
 
 sub api_setOrder { 
 	my ($args, $context) = @_;
-	my ($tbl, $ids) = @$args;
+	my ($tbl, $ids, $fld) = @$args;
 	my ($dbh, $user) = _get_dbh_and_user($context);	
 	my ($nsp, $tbl) = ($tbl =~ /\./) ? split(/\./,$tbl) : ('public', $tbl);
-	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.set_order($1::text, $2::text, $3::jsonb, $4::idtype, $5::jsonb)',
-		{}, $nsp, $tbl, WWW::Easy::to_json($ids), $user->{id}, WWW::Easy::to_json($context->{_db} ||= {}) );
+	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.set_order($1::text, $2::text, $3::jsonb, $4::text, $5::idtype, $6::jsonb)',
+		{}, $nsp, $tbl, WWW::Easy::to_json($ids), $fld || 'pos', $user->{id}, WWW::Easy::to_json($context->{_db} ||= {}) );
 	return  {ok=>1};
 }
 
