@@ -136,6 +136,11 @@ sub api_get {
 	my ($args, $user, $cb, $err_cb, $context, $db) = @_;
 	my ($tbl, $id, $opt) = @$args;	
 	my ($nsp, $tbl) = ($tbl =~ /\./) ? split(/\./,$tbl) : ('public', $tbl);
+	if($context && $context->{_db} && $context->{_db}->{_ids}) { 
+		if(my $new_id = $context->{_db}->{_ids}->{$id}) {
+			$id = $new_id;
+		}
+	}
 	$opt = { ($opt ? %$opt : ()), id=>$id, without_count => 1 };
 	my $sql = ['select orm_interface.mget($1, $2, auth_interface.check_internal_user ($3), $4, $5, $6)', $nsp, $tbl, $user, 1, 1, to_json( $opt ) ]; 
 	my $w =  db_query_json( $context->{_pg} || $db, $sql, sub { 
