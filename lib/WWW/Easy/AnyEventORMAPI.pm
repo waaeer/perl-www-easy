@@ -73,6 +73,11 @@ sub api_save {
 					$context->{_db}->{_ids}->{ $tmp_id } = $misc->{_ids}->{$tmp_id};
 				}
 			}
+			if($misc->{_created_ids}) { 
+				foreach my $tmp_id (keys %{$misc->{_created_ids}}) { 
+					$context->{_db}->{_created_ids}->{ $tmp_id } = $misc->{_created_ids}->{$tmp_id};
+				}
+			}
 			$cb->({obj=>$obj});
 		}, 
 		$err_cb,
