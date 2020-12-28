@@ -462,10 +462,12 @@ sub u2 {
     return Encode::decode_utf8($txt);
 }
 sub from_json { 
-	return JSON::XS::decode_json(Encode::encode_utf8(shift));
+	my $x = shift;
+	return defined($x) ? JSON::XS::decode_json(Encode::encode_utf8($x)) : undef;
 }
-sub to_json { 
-	return Encode::decode_utf8(JSON::XS::encode_json(shift));
+sub to_json {
+	my $x = shift;
+	return defined($x) ? Encode::decode_utf8(JSON::XS::encode_json($x)) : undef;
 }
 sub _extract_json_prefix { 
     my $res = shift;
