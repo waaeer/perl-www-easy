@@ -25,7 +25,7 @@ our $VERSION = "0.11";
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);
 our @EXPORT=qw( $R $APR $URI $ARGS  $VARS $PATH $TAIL $ABSHOME $CTPP
-	makeTemplatePage htmlPage xmlPage e404 e500 e403 redirect url_escape ajax u2 removeTags
+	makeTemplatePage htmlPage xmlPage pdfPage e404 e500 e403 redirect url_escape ajax u2 removeTags
 	request_content no_cache runTemplate from_json to_json http_date
 );
 
@@ -429,18 +429,30 @@ sub runTemplate {
 }
  
 sub htmlPage {
-        my ($text) = @_;
-        $R->status(200);
-        $R->content_type('text/html');
-        $R->print($text);
-        return 200;
+	my ($text) = @_;
+	$R->status(200);
+	$R->content_type('text/html');
+	$R->print($text);
+	return 200;
 }
 sub xmlPage {
-        my ($text) = @_;
-        $R->status(200);
-        $R->content_type('text/xml');
-        $R->print($text);
-        return 200;
+	my ($text) = @_;
+	$R->status(200);
+	$R->content_type('text/xml');
+	$R->print($text);
+	return 200;
+}
+sub pdfPage { 
+	my ( $data, $attachment_filename) = @_;
+    $R->status(200);
+    $R->content_type('application/pdf');
+    delete $R->err_headers_out->{$_} for qw /Pragma Expires Cache-control/;
+    $R->err_headers_out->add('Content-Disposition', 'attachment; filename="'.($attachment_filename || 'file.pdf').'"');
+    $R->err_headers_out->add('Expires', '0');
+    $R->err_headers_out->add('Cache-Control', 'private');# так работает в ИЕ отдача по https
+    # не нужно, а для https - вредно $r->err_headers_out->add('Pragma', 'no-cache');
+    $R->print(ref($data) ? $$data : $data);  # лучше передавать указатель
+    return 200;
 }
 
 sub e404 {

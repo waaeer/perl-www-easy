@@ -4,6 +4,7 @@ lib/WWW/Easy/AnyEvent.pm
 lib/WWW/Easy/AnyEventORMAPI.pm
 lib/WWW/Easy/AnyEventPg.pm
 lib/WWW/Easy/Daemon.pm
+lib/WWW/Easy/HTML2PDF.pm
 lib/WWW/Easy/Mail.pm
 lib/WWW/Easy/ORMAPI.pm
 lib/WWW/Easy/Pg.pm
