@@ -20,7 +20,7 @@ use POSIX qw(modf);
 use Time::HiRes;
 
 use WWW::Easy::Auth;
-our $VERSION = "0.12";
+our $VERSION = "0.13";
 
 use Carp;
 our ($R, $APR, $URI, $ARGS, $VARS, $PATH, $TAIL, $ABSHOME, $USER, $CTPP, %CTPPS);

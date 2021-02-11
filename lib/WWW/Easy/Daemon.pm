@@ -81,7 +81,41 @@ sub daemonize {
 		}
 		exit(1);
     };
-    Net::Server::Daemonize::daemonize($user || 'nobody',$group || 'nogroup', $pidfile);
+
+	$user  ||= 'nobody';
+	$group ||= 'nogroup';
+
+### start Net::Server::Daemonize::daemonize remake
+
+    Net::Server::Daemonize::check_pid_file($pidfile) if defined $pidfile;
+
+    my $uid = Net::Server::Daemonize::get_uid($user);
+    my $gid = Net::Server::Daemonize::get_gid($group); # returns list of groups
+    my $pid = Net::Server::Daemonize::safe_fork();
+    exit(0) if $pid; # exit parent
+
+    # child
+    Net::Server::Daemonize::create_pid_file($pidfile) if defined $pidfile;
+
+	my $gid0 = (split(/\s+/, $gid))[0];
+    chown($uid, $gid0, $pidfile) if defined $pidfile;
+
+    Net::Server::Daemonize::set_user($uid, $gid);
+
+    open STDIN,  '<', '/dev/null' or die "Can't open STDIN from /dev/null: [$!]\n";
+    open STDOUT, '>', '/dev/null' or die "Can't open STDOUT to /dev/null: [$!]\n";
+    open STDERR, '>&STDOUT'       or die "Can't open STDERR to STDOUT: [$!]\n";
+
+    ### does this mean to be chroot ?
+    chdir '/' or die "Can't chdir to \"/\": [$!]";
+
+    POSIX::setsid(); # Turn process into session leader, and ensure no controlling terminal
+
+    ### install a signal handler to make sure SIGINT's remove our pid_file
+    $SIG{'INT'}  = sub { HUNTSMAN($pidfile) } if defined $pidfile;
+
+### end et::Server::Daemonize::daemonize remake
+
 	if($logdir) { 
     	open(STDOUT, '>>', $logfile) || die("Cannot open $logfile: $!");  # "Daemonize" redirects stderr to stdout and stdout to /dev/null
 		open(STDERR, '>>', $logfile) || die("Cannot open $logfile: $!");  # "Daemonize" redirects stderr to stdout and stdout to /dev/null

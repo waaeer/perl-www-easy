@@ -1,3 +1,9 @@
+libwww-easy-perl (0.13-1) unstable; urgency=medium
+
+  * worked around Net::Server::Daemonize bug
+
+ -- Ivan Panchenko <wao@mail.ru> Thr, 11 Feb 2021 15:28:00 +0300
+
 libwww-easy-perl (0.12-1) unstable; urgency=medium
 
   * add HTML2PDF converter
