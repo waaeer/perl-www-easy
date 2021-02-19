@@ -337,7 +337,7 @@ sub _make_token_key {
 }
 
 sub sendToken { 
-        my ($r, $name, $user_id, $secret) = @_;
+        my ($r, $name, $user_id, $secret, %opt) = @_;
         my $now = time();
         my $cookie = join('!', _make_token_key ($user_id, $now, $r, $secret), $user_id, $now);
         my $coo = Apache2::Cookie->new($r,
@@ -345,7 +345,8 @@ sub sendToken {
 			  -secure   => ($r->headers_in()->{'X-AbsHome'} =~ m|^https://| ? 1 : 0),
               -name  => $name,
               -value => $cookie, 
-              -path  => "/"
+              -path  => "/",
+			  ( $opt{domain} ? ( -domain=>$opt{domain} ) : () )
         );
         $coo->bake($r);
 }
