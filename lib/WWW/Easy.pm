@@ -253,13 +253,13 @@ sub api {
 		if($funcname eq 'login') {
 			my $user = ($opt{auth}->{check_password} || die("No auth.check_password specified"))->($data->[0], $data->[1]);
 			if($user) { 
-				WWW::Easy::sendToken($R, $cookie, $user->{id}, $key);  
+				WWW::Easy::sendToken($R, $cookie, $user->{id}, $key, domain=>$opt{auth}->{domain});  
     	        return ajax({ok=>1});
 			} else {
 				return ajax({must_authenticate=>1,reason=>'Bad'});
 			}
 		} elsif($funcname eq 'logout') { 
-			WWW::Easy::clearToken($R, $cookie);
+			WWW::Easy::clearToken($R, $cookie, domain=>$opt{auth}->{domain});
 			return ajax({ok=>1});
 		}
 		my $user_id = WWW::Easy::checkToken($R, $cookie, 86400, $key);
@@ -351,12 +351,14 @@ sub sendToken {
         $coo->bake($r);
 }
 sub clearToken { 
-		my ($r, $name) = @_;
+		my ($r, $name, %opt) = @_;
 		my $coo = Apache2::Cookie->new($r,
 			-name  => $name,
             -value => '', 
             -path  => "/",
-			-expires=>'-36M'
+			-expires=>'-36M',
+			( $opt{domain} ? ( -domain=>$opt{domain} ) : () )
+
 		);
 		$coo->bake($r);
 }       

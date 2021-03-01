@@ -73,7 +73,7 @@ sub new {
 						}
 						my %context;
 						my $ok_cb = sub { 
-							my ($ret, %opt, $action) = @_;
+							my ($ret, %opt) = @_;
 							my %addh = $opt{headers} ? %{$opt{headers}} : ();
 							if($opt{logout}) { 
 								$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
@@ -81,7 +81,11 @@ sub new {
 								$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
 							}
 	#						warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
-							$request->replyjs(200, $ret , headers=>{  %h, %addh });
+							if($opt{nojs}) {
+								$request->reply(200, $ret, headers=>{  %h, %addh });
+							} else {
+								$request->replyjs(200, $ret , headers=>{  %h, %addh });
+							}
 						};
 						my $err_cb = sub { 
 							my $err = shift;
