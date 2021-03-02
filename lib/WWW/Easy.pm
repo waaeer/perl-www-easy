@@ -378,7 +378,7 @@ sub makeTemplatePage {
 					$ok = $t; last;
 				}
 			}
-			warn "found: $ok\n";
+#			warn "found: $ok\n";
 			if($ok) { $template = $ok; } 
 			else { return 404; } 
 		
