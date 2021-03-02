@@ -373,7 +373,7 @@ sub makeTemplatePage {
 			my $dir = $R->dir_config('CUSTOM_TEMPATES') || $R->dir_config('TEMPLATES');
 			my $ok;
 			foreach my $t (@$template) { 
-				warn "search in $dir/$t\n";
+#				warn "search in $dir/$t\n";
 				if(-f "$dir/$t.ctpp") { 
 					$ok = $t; last;
 				}
@@ -409,12 +409,12 @@ sub runTemplate {
 		my $dir = $R->dir_config('CUSTOM_TEMPATES') || $R->dir_config('TEMPLATES');
 		my $ok;
 		foreach my $t (@$template) { 
-			warn "search in $dir/$t\n";
+#			warn "search in $dir/$t\n";
 			if(-f "$dir/$t.ctpp") { 
 				$ok = $t; last;
 			}
 		}
-		warn "found: $ok\n";
+#		warn "found: $ok\n";
 		if($ok) { $template = $ok; } 
 			else { return 404; } 
 	}
