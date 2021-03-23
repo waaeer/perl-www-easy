@@ -420,14 +420,14 @@ sub runTemplate {
 	}
 
     my $obj ## devel! = $templateCache{$template}  ## do not autoreread if cache on!
-                ||= $CTPP->parse_template("$template.ctpp");
+		||= (ref($template) eq 'SCALAR') ? $CTPP->parse_text($$template) : $CTPP->parse_template("$template.ctpp");
         if(!$obj) { 
                 my $e = $CTPP -> get_last_error();
                 die "Template error: $template at line $e->{line} pos $e->{pos}: $e->{error_code} : $e->{error_str}";
         }
         $CTPP->reset();
         $CTPP->param($opt);
-    return $CTPP->output($obj);
+    return u2($CTPP->output($obj));
 
 }
  
@@ -476,6 +476,12 @@ sub u2 {
     if(utf8::is_utf8($txt)) { return $txt; }
     return Encode::decode_utf8($txt);
 }
+sub f2 { 
+    my ($txt) = @_; 
+    if(!utf8::is_utf8($txt)) { return $txt; }
+    return Encode::encode_utf8($txt);
+}
+
 sub from_json { 
 	my $x = shift;
 	return defined($x) ? JSON::XS::decode_json(Encode::encode_utf8($x)) : undef;
