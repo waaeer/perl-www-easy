@@ -5,6 +5,7 @@ use WWW::Easy::Auth;
 use WWW::Easy::Daemon; # for easy_try only
 use AnyEvent::HTTP::Server;
 use JSON::XS;
+use Encode;
 use base qw(AnyEvent::HTTP::Server);
 
 sub new { 	
@@ -122,24 +123,30 @@ sub new {
                       	return;
                     }
 				}
-				if ($request->[2]->{'content-type'} =~ m|^application/x-www-form-urlencoded|) {
+				if ($request->[2]->{'content-type'} =~ m!^application/(json|x-www-form-urlencoded)!) {
 					my $func = $self->can("post_$uri");
+					my $format = $1;
 					return {
 							form => $func ? sub {
-								my ($form) = @_;
-								my %data; 
-								foreach my $k (keys %$form) { 
-									my $v = $form->{$k};
-									$data{$k} = ref($v) eq 'aehts::av' ? [map { $_->[0] } @$v ] : $v->[0];
-								}
+								my ($form, $text) = @_;
+								my $data;
 								my $diehandler = $SIG{__DIE__};
             			        $SIG{__DIE__} = undef;
 								eval {
-									$func->(\%data, $request, \%context, $user_id);
+									if($format eq 'json') {
+										$data = defined($text) && $text ne '' ? JSON::XS::decode_json(utf8::is_utf8($text) ? Encode::encode_utf8($text) : $text ) : undef;
+									} else {
+										$data = {};
+										foreach my $k (keys %$form) { 
+											my $v = $form->{$k};
+											$data->{$k} = ref($v) eq 'aehts::av' ? [map { $_->[0] } @$v ] : $v->[0];
+										}
+									}
+									$func->($data, $request, \%context, $user_id);
 								};
 								$SIG{__DIE__} = $diehandler;
 								if(my $err = $@) {
-									warn "Error occured in POST :", Data::Dumper::Dumper($uri, \%data, $err);
+									warn "Error occured in POST :", Data::Dumper::Dumper($uri, $data, $err);
 									$request->reply(500, 'Error occured');
 								}
 							} : sub {
@@ -147,6 +154,7 @@ sub new {
 							}
 											
 					};
+	
 				} elsif($request->[2]->{'content-type'} =~ m|^multipart/form-data|) { 
 					my $func = $self->can("post_$uri");
 					my %data;
