@@ -33,7 +33,7 @@ BEGIN {
 	$SIG{__WARN__} = sub {
 		my $t = Time::HiRes::time();
 		my ($s, $m, $h, $day, $mon, $year) = (localtime(int $t))[0 .. 5];
-		my $hostport = join ':', $R->get_server_name, $R->get_server_port;
+		my $hostport = $R ? join (':', $R->get_server_name, $R->get_server_port) : '';
 		print STDERR sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%06d] [warn] [$$] [%s] ", $year+1900, $mon+1, $day, $h, $m, $s, int((POSIX::modf($t))[0]*1000000), $hostport
 			),
 			@_;
