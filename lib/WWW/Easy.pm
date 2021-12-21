@@ -240,7 +240,11 @@ sub api {
 	my $content;
 	my $length = $R->headers_in->{'Content-length'};
 	$R->read($content, $length) if $length;
-	my $data = $content ? JSON::XS::decode_json($content) : undef;
+	my $data = $content ? 
+		($JSON::XS::VERSION>=4 
+			? JSON::XS->new->boolean_values(0,1)->decode($content)
+			: JSON::XS::decode_json($content) 
+		) : undef;
 	$TAIL =~ s|^/||g;
 	$TAIL =~ s|/+|/|g;
 	((my $funcname), $TAIL) = split('/', $TAIL, 2);
