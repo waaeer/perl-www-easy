@@ -242,7 +242,7 @@ sub api {
 	$R->read($content, $length) if $length;
 	my $data = $content ? 
 		($JSON::XS::VERSION>=4 
-			? JSON::XS->new->boolean_values(0,1)->decode($content)
+			? JSON::XS->new->boolean_values(0,1)->utf8->decode($content)
 			: JSON::XS::decode_json($content) 
 		) : undef;
 	$TAIL =~ s|^/||g;
