@@ -46,7 +46,7 @@ sub new {
 								$request->replyjs(
 									($user_id ? {user => $user_id } : {must_authenticate=>1, reason=>'Bad'}), 
 									headers => {
-										%h, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly")  : ())
+										%h, ($user_id ?  ("Set-Cookie" => 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly".($opt{auth_cookie_expires} ? "; Expires=".$opt{auth_cookie_expires} : ""))  : ())
 									},
 									## send token in headers
 								);
@@ -79,7 +79,7 @@ sub new {
 							if($opt{logout}) { 
 								$addh{"Set-Cookie"} = "u=ram; Path=/; HttpOnly";
 							} elsif( my $user_id = $opt{set_user_token})  {
-								$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly";
+								$addh{"Set-Cookie"} = 'u='.$self->makeToken($request,$user_id,$KEY)."; Path=/; HttpOnly".($opt{auth_cookie_expires} ? "; Expires=".$opt{auth_cookie_expires} : "");
 							}
 	#						warn "Replying for api method = $method ret=".Data::Dumper::Dumper($ret));
 							if($opt{nojs}) {
