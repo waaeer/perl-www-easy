@@ -16,6 +16,6 @@ Depends: ${misc:Depends}, ${perl:Depends}, libhtml-ctpp2-perl,
   libapache2-mod-apreq2, libapache2-request-perl, libnet-server-perl, libfile-slurp-perl,
   libproc-pid-file-perl, libdevel-stacktrace-perl, libanyevent-http-server-ii-perl, libhash-merge-perl,
   libemail-date-format-perl, libipc-run-perl
-Description: Minimalistic Perl web framework
-  Runs ander apache2; uses ctpp for templating.
-  Can send mail.
+Description: Minimalistic Perl web framework.
+ Runs ander apache2 or AnyEvent::HTTP::Server; uses CTPP for templating.
+ Can send mail.

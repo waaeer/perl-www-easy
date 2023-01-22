@@ -2,25 +2,25 @@ libwww-easy-perl (0.14-1) unstable; urgency=medium
 
   * added DateUtil module
 
- -- Ivan Panchenko <wao@mail.ru> Sun, 22 Jan 2023 18:02:00 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Sun, 22 Jan 2023 18:02:00 +0300
 
 libwww-easy-perl (0.13-1) unstable; urgency=medium
 
   * worked around Net::Server::Daemonize bug
 
- -- Ivan Panchenko <wao@mail.ru> Thu, 11 Feb 2021 15:28:00 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Thu, 11 Feb 2021 15:28:00 +0300
 
 libwww-easy-perl (0.12-1) unstable; urgency=medium
 
   * add HTML2PDF converter
 
- -- Ivan Panchenko <wao@mail.ru> Sun, 7 Feb 2021 23:00:00 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Sun, 7 Feb 2021 23:00:00 +0300
 
 libwww-easy-perl (0.11-1) unstable; urgency=medium
 
   * minor fixes
 
- -- Ivan Panchenko <wao@mail.ru> Mon, 4 Dec 2020 00:00:00 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Mon, 4 Dec 2020 00:00:00 +0300
 
 libwww-easy-perl (0.10-1) unstable; urgency=medium
 
@@ -41,6 +41,8 @@ libwww-easy-perl (0.8-2) unstable; urgency=medium
 
  -- Ivan Panchenko <wao@mail.ru>  Wed, 25 Mar 2020 18:09:06 +0300
 
+libwww-easy-perl (0.8-1) unstable; urgency=medium
+
   * Multiple improvements
 
  -- Ivan Panchenko <wao@mail.ru>  Fri, 27 Dec 2019 00:07:06 +0300
@@ -55,7 +57,7 @@ libwww-easy-perl (0.6-1) UNRELEASED; urgency=medium
 
   * Asnychronous API framework
 
- -- Ivan Panchenko <ivan@tyshet>  Sun, 24 Jul 2016 11:00:52 +0300
+ -- Ivan Panchenko <wao@mail.ru>  Sun, 24 Jul 2016 11:00:52 +0300
 
 libwww-easy-perl (0.5-1) unstable; urgency=low
 
