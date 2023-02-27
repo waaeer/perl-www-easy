@@ -65,7 +65,7 @@ sub db_query {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
 						$user_error = (WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } ) || 'Incorrect JSON error message';
-                    } elsif($err =~ /^(.*)\sat \/usr\/local/) {
+                    } elsif($err =~ /^(.*)\sat \/usr\//) {
                         $user_error = $1;
 					}
 				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
