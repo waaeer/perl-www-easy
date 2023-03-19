@@ -4,9 +4,9 @@ use Proc::PID::File;
 use Sys::Syslog;
 use File::Slurp;
 use Net::Server::Daemonize;
-use JSON::XS;
 use Devel::StackTrace;
 use Pod::Usage;
+use WWW::Easy::Config;
 
 our @ISA    = qw(Exporter);
 our @EXPORT = qw(start_script read_config pod2usage daemonize easy_try);
@@ -124,10 +124,14 @@ sub daemonize {
 
 sub read_config { 
     my $config_file = shift;
-    -f $config_file or pod2usage (-msg=>"Config file $config_file doesn't exist");
-    -r $config_file or pod2usage (-msg=>"Config file $config_file is not readable");
-
-    return decode_json(File::Slurp::read_file($config_file) || pod2usage(-msg=>"Config file $config_file empty"));
+	my $ret;
+	eval {
+		$ret = WWW::Easy::Config::read_config($config_file);
+	};
+	if($@) { 
+		pod2usage (-msg=>$@);
+	}
+    return $ret;
 }
 
 sub easy_try(&) {
