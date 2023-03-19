@@ -3,6 +3,7 @@ lib/WWW/Easy/Auth.pm
 lib/WWW/Easy/AnyEvent.pm
 lib/WWW/Easy/AnyEventORMAPI.pm
 lib/WWW/Easy/AnyEventPg.pm
+lib/WWW/Easy/Config.pm
 lib/WWW/Easy/Daemon.pm
 lib/WWW/Easy/HTML2PDF.pm
 lib/WWW/Easy/Mail.pm
