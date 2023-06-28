@@ -164,11 +164,16 @@ sub _build {
 		});
 		$cont->add_part(_build_text_and_html($opt, {}));
 		foreach my $f (@$files) { 
-			$cont->attach(
-				Path     => $f,
-				Encoding => 'base64',
-				Disposition => "attachment"
-			);
+            if (ref $f eq 'HASH') {
+            	$f->{Data} = _u2($f->{Data});
+				$cont->attach(%$f);
+            } else {
+				$cont->attach(
+					Path     => $f,
+					Encoding => 'base64',
+					Disposition => "attachment"
+				);
+			}
 #			my $type = File::Type->new()->mime_type($f);
 #			$cont->add_part( MIME::Entity->build (
 #				Type     => $type,
