@@ -148,9 +148,9 @@ sub _build {
 		To      => _serialize_addr($to),
 		From    => _serialize_addr([$from]),
 		Cc      => _serialize_addr($cc),
-		'Message-ID' => '<'.encode('MIME-Header',sprintf('M_%04i%lx%d',int(rand(2e9)),time,$$). 
-				(ref($from) eq 'ARRAY' ? $from->[0] : $from)
-		).'>',
+		'Message-ID' => '<'.sprintf('M_%04i%lx%d',int(rand(2e9)),time,$$).
+				(ref($from) eq 'ARRAY' ? $from->[0] : $from).
+		'>',
 		Date    => Email::Date::Format::email_date(),
 	);
 #	warn Data::Dumper::Dumper('header', \%email_header);
