@@ -3,7 +3,7 @@ package WWW::Easy::ORMAPI;
 use strict;
 use base 'Exporter';
 use DBI::Ext;
-our @EXPORT=qw(api_mget api_get api_save api_delete api_setOrder);
+our @EXPORT=qw(api_mget api_get api_save api_delete api_setOrder api_setOrderParent);
 
 sub _get_dbh_and_user {
 	my $context = shift;
@@ -76,4 +76,13 @@ sub api_setOrder {
 	return  {ok=>1};
 }
 
+sub api_setOrderParent { 
+	my ($args, $context) = @_;
+	my ($tbl, $ids, $fld, $parent_fld, $parent_id) = @$args;
+	my ($dbh, $user) = _get_dbh_and_user($context);	
+	my ($nsp, $tbl) = ($tbl =~ /\./) ? split(/\./,$tbl) : ('public', $tbl);
+	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.set_order_parent($1::text, $2::text, $3::jsonb, $4::text, $5::text, $6::idtype, $7::idtype, $8::jsonb)',
+		{}, $nsp, $tbl, WWW::Easy::to_json($ids), $fld || 'pos', $parent_fld || 'parent', $parent_id, $user->{id}, WWW::Easy::to_json($context->{_db} ||= {}) );
+	return  {ok=>1};
+}
 1;
