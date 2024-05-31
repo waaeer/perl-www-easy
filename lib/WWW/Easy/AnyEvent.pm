@@ -94,13 +94,13 @@ sub new {
 						};
 						if($check) {
 							$check->($args, $user_id, sub { 
-								$func->($args, $user_id, $ok_cb, $err_cb, \%context);
+								$func->($args, $user_id, $ok_cb, $err_cb, \%context, $request);
 							}, sub {
 								my $err = shift;
 								$err_cb->($err);
 							}, \%context );
 						} else {
-							$func->($args, $user_id, $ok_cb, $err_cb, \%context);
+							$func->($args, $user_id, $ok_cb, $err_cb, \%context, $request);
 						}
 					};
 					$SIG{__DIE__} = $diehandler;
