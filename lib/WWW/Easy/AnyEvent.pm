@@ -15,6 +15,7 @@ sub new {
 	my $apiprefix      = $opt{api_prefix} || '/api';
 	my %public_methods = $opt{public_methods} ? map { $_=>1 } @{ $opt{public_methods}} : ();
 	my %public_posts   = $opt{public_posts}   ? map { $_=>1 } @{ $opt{public_posts}} : ();
+	my $token_ttl      = $opt{auth_token_ttl} || 86400;
 	my $self;
 
 	$self = AnyEvent::HTTP::Server->new(
@@ -57,7 +58,7 @@ sub new {
 						}
 						my $user_id;
 						if($opt{authentication} && !$public_methods{$method}) {
-							$user_id = $self->checkToken($request,'u',86400,$KEY);
+							$user_id = $self->checkToken($request,'u',$token_ttl,$KEY);
 							warn "got user=$user_id\n" if $verbose;
 							if(!$user_id) { 
 								warn "must auth for $method\n" if $verbose;
@@ -115,7 +116,7 @@ sub new {
 				$uri =~ s|[\./-]|_|sg;
 				my ($user_id, %context);
 				if($opt{authentication} && !$public_posts{$uri}) {
-					$user_id = $self->checkToken($request,'u',86400,$KEY);
+					$user_id = $self->checkToken($request,'u',$token_ttl,$KEY);
 					warn "got user=$user_id\n" if $verbose;
                     if(!$user_id) { 
                     	warn "must auth\n" if $verbose;

@@ -488,7 +488,7 @@ sub f2 {
 
 sub from_json { 
 	my $x = shift;
-	return defined($x) ? JSON::XS->new->allow_nonref->decode($x) : undef;
+	return defined($x) ? JSON::XS->new->allow_nonref->boolean_values(0,1)->decode($x) : undef;
 }
 sub to_json {
 	my $x = shift;
