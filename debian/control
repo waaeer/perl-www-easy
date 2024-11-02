@@ -3,7 +3,7 @@ Source: libwww-easy-perl
 Section: perl
 Priority: optional
 Maintainer: Ivan Panchenko <wao@mail.ru>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), libanyevent-perl
 Build-Depends-Indep: perl
 Standards-Version: 4.5.1
 Homepage: https://metacpan.org/release/WWW-Easy
@@ -14,7 +14,7 @@ Depends: ${misc:Depends}, ${perl:Depends}, libhtml-ctpp2-perl,
   libdbi-ext-perl,libdate-calc-perl,
   libjson-xs-perl, libhtml-strip-perl,  libapache2-mod-perl2, libfile-type-perl,
   libapache2-mod-apreq2, libapache2-request-perl, libnet-server-perl, libfile-slurp-perl,
-  libproc-pid-file-perl, libdevel-stacktrace-perl, libanyevent-http-server-ii-perl, libhash-merge-perl,
+  libproc-pid-file-perl, libdevel-stacktrace-perl, libanyevent-http-server-ii-perl (>=1.99998), libhash-merge-perl,
   libemail-date-format-perl, libipc-run-perl
 Description: Minimalistic Perl web framework.
  Runs ander apache2 or AnyEvent::HTTP::Server; uses CTPP for templating.

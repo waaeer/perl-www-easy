@@ -1,11 +1,12 @@
 package WWW::Easy::AnyEvent;
-use common::sense;
+use strict;
 use EV;
 use WWW::Easy::Auth;
 use WWW::Easy::Daemon; # for easy_try only
 use AnyEvent::HTTP::Server;
 use JSON::XS;
 use Encode;
+use POSIX qw(locale_h);
 use base qw(AnyEvent::HTTP::Server);
 
 sub new { 	
@@ -18,13 +19,17 @@ sub new {
 	my $token_ttl      = $opt{auth_token_ttl} || 86400;
 	my $self;
 
+	setlocale(LC_TIME, "C");
+
 	$self = AnyEvent::HTTP::Server->new(
 		%opt,
 		cb => sub {
 			my $request = shift;
-			warn "Request: $request->[0] $request->[1]\n" if $verbose;
+			my $http_method = $request->method;
+			my $uri = $request->uri;
+			warn "Request: $http_method $uri\n" if $verbose;
 			my %h = (connection=>'close');
-			if ($request->[1] =~ m|^${apiprefix}/([-\w]+)|) { 
+			if ($uri =~ m|^${apiprefix}/([-\w]+)|) { 
 				my $method = $1;
 				my $args = '';
 				warn "API method $method called\n" if $verbose;
@@ -59,7 +64,7 @@ sub new {
 						my $user_id;
 						if($opt{authentication} && !$public_methods{$method}) {
 							$user_id = $self->checkToken($request,'u',$token_ttl,$KEY);
-							warn "got user=$user_id\n" if $verbose;
+							warn "got user=$user_id for k=$KEY t=$token_ttl k=".$request->headers->{cookie}."\n" if $verbose;
 							if(!$user_id) { 
 								warn "must auth for $method\n" if $verbose;
 								$request->replyjs(200, {must_authenticate=>1}, headers=>\%h);
@@ -110,8 +115,7 @@ sub new {
 						$request->replyjs(500, {error=>'Error occured', ($opt{return_error} ? (detail=>$err) :() )}, headers=>\%h);
 					} 
 				};
-			} elsif($request->[0] eq 'POST') { 
-				my $uri = $request->[1];
+			} elsif($http_method eq 'POST') { 
 				$uri =~ s|^/+||gs;
 				$uri =~ s|[\./-]|_|sg;
 				my ($user_id, %context);
@@ -124,7 +128,7 @@ sub new {
                       	return;
                     }
 				}
-				if ($request->[2]->{'content-type'} =~ m!^application/(json|x-www-form-urlencoded)!) {
+				if ($request->headers->{'content-type'} =~ m!^application/(json|x-www-form-urlencoded)!) {
 					my $func = $self->can("post_$uri");
 					my $format = $1;
 					return {
@@ -156,7 +160,7 @@ sub new {
 											
 					};
 	
-				} elsif($request->[2]->{'content-type'} =~ m|^multipart/form-data|) { 
+				} elsif($request->headers->{'content-type'} =~ m|^multipart/form-data|) { 
 					my $func = $self->can("post_$uri");
 					my %data;
 					return { multipart => $func ? sub {
@@ -188,13 +192,12 @@ sub new {
 					};
 				} else {
 					return sub {
-						warn "No form handler for POST $uri ".$request->[2]->{'content-type'}."\n";
+						warn "No form handler for POST $uri ".$request->headers->{'content-type'}."\n";
 						warn  Data::Dumper::Dumper($request);
 						$request->reply(404, 'No handler');
 					}
 				}
 			} else { 
-				my $uri = $request->[1]; 
 				my $page = $uri;
 				$page =~ s|^/+||gs;
 				$page =~ s|[\./-]|_|sg;
@@ -211,7 +214,7 @@ sub new {
 					} 
 
 				} else { 
-					warn "Invalid URL ($page) $request->[1]";
+					warn "Invalid URL ($page) ".$request->uri;
 				  	$request->replyjs(404, {error=>'Invalid url'});
 				}
 			}
