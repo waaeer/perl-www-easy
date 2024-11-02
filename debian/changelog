@@ -1,3 +1,9 @@
+libwww-easy-perl (0.15-1) unstable; urgency=medium
+
+  * adapted to current AnyEvent::HTTP::Server version
+
+ -- Ivan Panchenko <wao@mail.ru>  Sat, 02 Nov 2024 15:02:00 +0300
+
 libwww-easy-perl (0.14-1) unstable; urgency=medium
 
   * added DateUtil module
