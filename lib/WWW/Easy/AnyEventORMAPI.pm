@@ -93,18 +93,7 @@ sub api_msave {
 		['SELECT * FROM orm_interface.msave($1::text, $2::text, auth_interface.add_or_check_internal_user ($3::text), $4::int, $5::int, $6::jsonb, $7::jsonb, $8::jsonb)', $nsp, $tbl, $user, $page, $pagesize, to_json($query), to_json($data), to_json($context->{_db}) ],
 		sub { 
 #			warn "orm save returned ". Data::Printer::np($res);
-			my ($obj, $misc) = @_;
-			if($misc->{_ids}) {  # запомним временные id, возникшие внутри
-				foreach my $tmp_id (keys %{$misc->{_ids}}) { 
-					$context->{_db}->{_ids}->{ $tmp_id } = $misc->{_ids}->{$tmp_id};
-				}
-			}
-			if($misc->{_created_ids}) { 
-				foreach my $tmp_id (keys %{$misc->{_created_ids}}) { 
-					$context->{_db}->{_created_ids}->{ $tmp_id } = $misc->{_created_ids}->{$tmp_id};
-				}
-			}
-			$cb->({obj=>$obj});
+			$cb->({ok=>1});
 		}, 
 		$err_cb,
 	);
