@@ -65,6 +65,7 @@ sub new {
 						if($opt{authentication} && !$public_methods{$method}) {
 							$user_id = $self->checkToken($request,'u',$token_ttl,$KEY);
 							warn "got user=$user_id for k=$KEY t=$token_ttl k=".$request->headers->{cookie}."\n" if $verbose;
+							warn Data::Dumper::Dumper($request->headers) if $verbose >= 2;
 							if(!$user_id) { 
 								warn "must auth for $method\n" if $verbose;
 								$request->replyjs(200, {must_authenticate=>1}, headers=>\%h);
