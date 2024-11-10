@@ -62,13 +62,8 @@ sub api_msave {
 	delete $data->{__return};	
 	my ($dbh, $user) = _get_dbh_and_user($context);
 	my ($nsp, $tbl) = ($xtbl =~ /\./) ? split(/\./,$xtbl) : ('public', $xtbl);
-	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.mget($1::text, $2::text, $3::idtype, $4::int, $5::int, $6::jsonb, $7::jsonb, $8::jsonb)',
-		{}, $nsp, $tbl, $user->{id}, $page, $pagesize, WWW::Easy::to_json($query || {} ), WWW::Easy::to_json($data || {} ) , WWW::Easy::to_json($context->{_db}));
-	return WWW::Easy::from_json($r->[0]);
-	
-	
-	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.msave($1::text, $2::text, $3::text, $4, $5::jsonb, $6::jsonb)', 
-		{}, $nsp, $tbl, $id, $user->{id}, WWW::Easy::to_json($data), WWW::Easy::to_json($context->{_db} ||+{}));
+	my $r = $dbh->selectrow_arrayref('SELECT * FROM orm_interface.msave($1::text, $2::text, $3::text, $4::int, $5::int, $6::jsonb, $7::jsonb, $8::jsonb)', 
+		{}, $nsp, $tbl, $user->{id}, $page, $pagesize, WWW::Easy::to_json($query), WWW::Easy::to_json($data), WWW::Easy::to_json($context->{_db} ||+{}));
 	return {ok =>1};
 }
 

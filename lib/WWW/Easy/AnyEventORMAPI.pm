@@ -92,7 +92,7 @@ sub api_msave {
 	return db_query_json( $context->{_pg} || $db, 
 		['SELECT * FROM orm_interface.msave($1::text, $2::text, auth_interface.add_or_check_internal_user ($3::text), $4::int, $5::int, $6::jsonb, $7::jsonb, $8::jsonb)', $nsp, $tbl, $user, $page, $pagesize, to_json($query), to_json($data), to_json($context->{_db}) ],
 		sub { 
-#			warn "orm save returned ". Data::Printer::np($res);
+#			warn "orm msave returned ". Data::Printer::np($_[0]);
 			$cb->({ok=>1});
 		}, 
 		$err_cb,
