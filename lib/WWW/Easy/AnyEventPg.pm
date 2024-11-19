@@ -31,7 +31,7 @@ sub db_connect {
 }
 
 sub db_query { 
-	my ($db, $query, $cb, $err_cb) = @_;
+	my ($db, $query, $cb, $err_cb, %opt) = @_;
 	my $q;
 #warn "WAO DB_QUERY (".(ref($query)? '['.join(', ', @$query).']' :$query).", $cb, $err_cb)\n";
 	$q = $db->push_query(
@@ -65,7 +65,7 @@ sub db_query {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
 						$user_error = (WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } ) || 'Incorrect JSON error message';
-                    } elsif($err =~ /^(.*)\sat \/usr\//) {
+                    } elsif($opt{expose_scalar_errors} && ($err =~ /^(.*)\s(CONTEXT: |at \/usr\/)/s)) {
                         $user_error = $1;
 					}
 				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
@@ -83,22 +83,22 @@ sub db_query {
 }
 
 sub db_query_rows { 
-	my ($db, $query, $cb, $err_cb) = @_;
-	return db_query($db, $query, sub { $cb->([shift->rows]) }, $err_cb);
+	my ($db, $query, $cb, $err_cb, @opt) = @_;
+	return db_query($db, $query, sub { $cb->([shift->rows]) }, $err_cb, @opt);
 }
 
 sub db_query_row_hashes { 
-	my ($db, $query, $cb, $err_cb) = @_;
-	return db_query ($db, $query, sub { $cb->([shift->rowsAsHashes]) }, $err_cb);
+	my ($db, $query, $cb, $err_cb, @opt) = @_;
+	return db_query ($db, $query, sub { $cb->([shift->rowsAsHashes]) }, $err_cb, @opt);
 }
 sub db_query_json { 
-	my ($db, $query, $cb, $err_cb) = @_;
-	return db_query ($db, $query, sub { $cb->(process_json_result($_[0])) }, $err_cb);
+	my ($db, $query, $cb, $err_cb, @opt) = @_;
+	return db_query ($db, $query, sub { $cb->(process_json_result($_[0])) }, $err_cb, @opt);
 }
 
 sub db_query_scalar { 
-	my ($db, $query, $cb, $err_cb) = @_;
-	return db_query ($db, $query, sub { $cb->((shift->rows)[0]->[0]) }, $err_cb);
+	my ($db, $query, $cb, $err_cb, @opt) = @_;
+	return db_query ($db, $query, sub { $cb->((shift->rows)[0]->[0]) }, $err_cb, @opt);
 }
 
 sub _extract_json_prefix { 

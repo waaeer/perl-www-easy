@@ -10,7 +10,6 @@ lib/WWW/Easy/HTML2PDF.pm
 lib/WWW/Easy/Mail.pm
 lib/WWW/Easy/ORMAPI.pm
 lib/WWW/Easy/Pg.pm
-lib/WWW/Easy/SPI.pm
 Makefile.PL
 debian/changelog
 debian/compat
