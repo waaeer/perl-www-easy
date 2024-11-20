@@ -1,5 +1,6 @@
 package WWW::Easy::AnyEventORMAPI;
 use WWW::Easy::AnyEventPg;
+use Scalar::Util;
 
 ## Basic API for ORM::Easy through WWW::Easy::AnyEvent and WWW::Easy::AnyEventPg;
 use strict;
@@ -170,9 +171,5 @@ sub api_get {
 	}, $err_cb, $context);
 	$context->{'q'} = $w;  # чтоб раньше времени не померло
 }
-
-
-
-
 
 1;
