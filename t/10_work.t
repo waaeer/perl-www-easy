@@ -127,6 +127,7 @@ if($pid == 0) { #spawn the daemon
       timeout             => 100
 	);
 	$srv->run;
+	warn "Exiting daemon\n";
 	exit();
 }
 
@@ -135,6 +136,7 @@ if($pid == 0) { #spawn the daemon
 use POSIX ":sys_wait_h";
 warn "killing $pid\n";
 sub REAPER {
+	warn "reaper\n";
 	1 while waitpid(-1, WNOHANG) > 0;
     $SIG{CHLD} = \&REAPER;  
 };
@@ -206,6 +208,7 @@ is($r2->content, '{"error":{"key":"value"}}', "JSON error returns no details");
 my $r3 = call_api_ext("test_scalar_error", '[1]');
 is($r3->code, "500", "Scalar error returns 500 always");
 is($r3->content, '{"error":"Bad happened"}', "Scalar error exposition");
+
 
 
 kill HUP => $pid;
