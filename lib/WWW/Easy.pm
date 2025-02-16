@@ -496,7 +496,7 @@ sub to_json {
 }
 sub _extract_json_prefix { 
     my $res = shift;
-	return $res ? (JSON::XS->new->decode_prefix($res))[0] : undef;
+	return $res ? (JSON::XS->new->boolean_values(0,1)->decode_prefix($res))[0] : undef;
 }
 
 
