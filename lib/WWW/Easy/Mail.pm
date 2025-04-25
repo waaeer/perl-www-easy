@@ -103,7 +103,7 @@ sub send {
 	my %opt = @_;
 	my $mailer = $opt{mail_client};
 	my $class = "WWW::Easy::Mail::".$mailer->{mailer};
-	if ($mailer->{mailer} !~ /^(SMTP|Sendmail)$/) { 
+	if(! *{$class.'::send'} )  { 
 		die("Unknown mailer $mailer->{mailer}");
 	}
 
@@ -134,6 +134,14 @@ sub _serialize_addr {
 #		return  encode('MIME-Header', _u2($addr));
 	}
 }
+
+sub file_type {
+	my $name = shift;
+	return 'text/plain' if $name =~ /.txt$/;
+    our $filetype ||= File::Type->new();
+    return $filetype->mime_type($name);
+}
+
 sub _build { 
 	my $opt = shift;
 	my $to     = $opt->{to};
@@ -168,19 +176,14 @@ sub _build {
             	$f->{Data} = _u2($f->{Data});
 				$cont->attach(%$f);
             } else {
+            	my $type = file_type($f);
 				$cont->attach(
 					Path     => $f,
 					Encoding => 'base64',
-					Disposition => "attachment"
+					Disposition => "attachment",
+					Type     => $type
 				);
 			}
-#			my $type = File::Type->new()->mime_type($f);
-#			$cont->add_part( MIME::Entity->build (
-#				Type     => $type,
-#				Top      => 0,
-#				Encoding => 'base64',
-#				Path     => $f
-#			));
 		}
 		return $cont;
 	} else { 
