@@ -17,6 +17,7 @@ sub new {
 	my %public_methods = $opt{public_methods} ? map { $_=>1 } @{ $opt{public_methods}} : ();
 	my %public_posts   = $opt{public_posts}   ? map { $_=>1 } @{ $opt{public_posts}} : ();
 	my $token_ttl      = $opt{auth_token_ttl} || 86400;
+	my %allowed_hm     = $opt{allowed_api_http_methods} ? map { $_=>1 } @{ $opt{allowed_api_http_methods}} : (POST=>1);
 	my $self;
 
 	setlocale(LC_TIME, "C");
@@ -44,7 +45,11 @@ sub new {
 					eval {
 						$args &&= JSON::XS::decode_json($args);
 						$args ||= {};
-						### toDo: ($R->headers_in->{'X-Requested-With'} eq 'XMLHttpRequest')  || return e404();
+						if( %allowed_hm && ! $allowed_hm{$http_method}) { # not allowed http method
+							warn "bad http method $http_method | allowed are:".join(' ', keys(%allowed_hm))."\n";
+							$request->reply(400, 'Bad request');
+							return;
+						}
 						if( $method eq 'login') { 
 #							warn "login $args->[0], $args->[1]\n";			 
 							$self->checkPassword( $args->[0], $args->[1], sub { 
