@@ -2,6 +2,8 @@ package WWW::Easy::Auth;
 use Digest::MD5;
 use Encode;
 use strict;
+our $DEBUG = 1;
+
 
 sub _make_token_key {
         my ($user_id, $time, $ipaddr, $secret) = @_;
@@ -23,12 +25,14 @@ sub _check_token {
         my $key_should_be = _make_token_key($user_id, $time, $ipaddr, $secret);
         if ($key eq $key_should_be) {
             if ($ttl && ($now - $time) > $ttl ) {
-                warn "[AUTH \"$name\"][IP $ipaddr] check_token error: Cookie $token expired: time=$time; now=$now";
+                warn "[AUTH \"$name\"][IP $ipaddr] check_token error: Cookie $token expired: time=$time; now=$now"
+                    if $WWW::Easy::Auth::DEBUG;
                 return undef;
             }
             return $user_id;
         }
-		warn "[AUTH \"$name\"][IP $ipaddr] check_token error: '$key' ne '$key_should_be'";
+		warn "[AUTH \"$name\"][IP $ipaddr] check_token error: '$key' ne '$key_should_be'"
+		    if $WWW::Easy::Auth::DEBUG;
         return undef;
 }        
 
