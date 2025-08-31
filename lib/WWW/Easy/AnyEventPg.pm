@@ -1,6 +1,7 @@
 package WWW::Easy::AnyEventPg;
 use strict;
 use AnyEvent::Pg::Pool; 
+use Data::Printer;
 use WWW::Easy::Daemon;  # for easy_try
 use base 'Exporter';
 # Postgres stuff for anyevent daemons
