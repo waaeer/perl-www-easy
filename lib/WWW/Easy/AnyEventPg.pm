@@ -62,15 +62,17 @@ sub db_query {
 				my $errmsg = $res->errorMessage;
 				warn "ERROR '$errmsg' cb=$err_cb\n";
 				my $user_error = 'Internal error';
-				if($errmsg =~ /^ERROR:\s+(?:ORM:)?\s*(.*)$/s) {
+				if ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
+					$user_error = { error => 'integrity', table => $3 };
+				} elsif ($errmsg =~ /^ERROR:\s+duplicate key value violates unique constraint "([^"]+)"/) { 
+					$user_error = { error => 'unique', constraint => $1 };
+				} elsif($errmsg =~ /^ERROR:\s+(?:ORM:)?\s*(.*)$/s) {
 					my $err = $1;
 					if($err =~ /^\{/) { # если начинается на { - это JSON
 						$user_error = (WWW::Easy::Daemon::easy_try { _extract_json_prefix($err) } ) || 'Incorrect JSON error message';
                     } elsif($opt{expose_scalar_errors} && ($err =~ /^(.*)\s(CONTEXT: |at \/usr\/)/s)) {
                         $user_error = $1;
 					}
-				} elsif ($errmsg =~ /^ERROR:\s+update or delete on table "([^"]+)" violates foreign key constraint "([^"]+)" on table "([^"]+)"/) { 
-					$user_error = { error => 'integrity', table => $3 };
 				}
 				return $err_cb->($user_error);
 			}

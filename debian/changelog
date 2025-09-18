@@ -1,3 +1,10 @@
+libwww-easy-perl (0.15-3) unstable; urgency=medium
+
+  * referencial constraint parser fixed
+  * added UNIQUE constraint parser
+
+ -- Ivan Panchenko <wao@mail.ru>  Thu, 19 Sep 2025 21:20:00 +0300
+
 libwww-easy-perl (0.15-2) unstable; urgency=medium
 
   * mailer auto determines attachment file type

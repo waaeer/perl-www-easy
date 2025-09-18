@@ -18,7 +18,7 @@ my $pgsql = eval { Test::PostgreSQL->new( pg_config => qq|
        |) }
 or plan skip_all => $@;
  
-plan tests => 15; 
+plan tests => 18; 
 
 
 my $sql = -d '/usr/local/share/orm-easy/' ? '/usr/local/share/orm-easy/' : '/usr/share/orm-easy/';
@@ -208,6 +208,20 @@ is($r2->content, '{"error":{"key":"value"}}', "JSON error returns no details");
 my $r3 = call_api_ext("test_scalar_error", '[1]');
 is($r3->code, "500", "Scalar error returns 500 always");
 is($r3->content, '{"error":"Bad happened"}', "Scalar error exposition");
+
+# error reporting for unique constraints
+$dbh->do(q!CREATE TABLE public.uobject (id serial, name text)!); 
+$dbh->do(q!CREATE UNIQUE INDEX uobject_u ON uobject(name)!);
+$dbh->do(q!CREATE FUNCTION public.can_insert_uobject(user_id idtype, id_ text, data jsonb) RETURNS bool LANGUAGE sql AS $$ SELECT true; $$!);
+
+
+call_api("save", '[ "public.uobject", null, {"name": "q"}]');
+my $r4 = call_api_ext("save", '[ "public.uobject", null, {"name": "q"}]');
+is($r4->code, "500", "Unique violation returns 500");
+my $c4 = JSON::XS::decode_json($r4->decoded_content)->{error};
+is($c4->{error},      'unique', "Unique violation error type");
+is($c4->{constraint}, 'uobject_u', "Unique violation constraint name");
+
 
 
 
