@@ -122,10 +122,9 @@ sub _serialize_addr {
 	if (ref($addr) eq 'ARRAY') { 
 		my $res = join(', ', map { 
 			(ref($_) eq 'ARRAY') 
-			? _2u(Mail::Address->new(_enquote(_2u($_->[1])), _2u($_->[0]))->format())
+			? _2u(Mail::Address->new(encode('MIME-Header',_2u($_->[1])), _2u($_->[0]))->format())
 			: _2u($_)
 		} @$addr);
-		$res =~ s/(".*?")/encode('MIME-Header', $1)/gsex;
 #		warn "res from ".Data::Dumper::Dumper($addr, $res);
 		return $res;
 	} else { 
@@ -204,11 +203,6 @@ sub _2u {
     } else { 
         return $_[0];
     }
-}
-sub _enquote { 
-	my $x = shift;
-	if(/^"(.*)"$/) { return $x; } 
-	else { return qq!"$x"!; }  
 }
 
 sub _sender { 
