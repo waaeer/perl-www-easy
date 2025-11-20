@@ -43,6 +43,12 @@ sub new {
 					my $diehandler = $SIG{__DIE__};
                     $SIG{__DIE__} = undef;
 					eval {
+						if($request->headers->{"content-type"} ne 'application/json') {
+							warn "bad http content-type for API: should be application/json, not ".($request->headers->{"content-type"})."\n";
+							warn "headers are ".Data::Dumper::Dumper($request->headers)."\n";
+							$request->reply(400, 'Bad request');
+							return;
+						}
 						$args &&= JSON::XS::decode_json($args);
 						$args ||= {};
 						if( %allowed_hm && ! $allowed_hm{$http_method}) { # not allowed http method
