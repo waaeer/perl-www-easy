@@ -232,6 +232,7 @@ sub new {
 			}
 		}
 	);
+	$self->{allow_perl_signal_handlers} = $opt{allow_perl_signal_handlers};
 	return bless $self, $class;
 }
 
@@ -247,9 +248,17 @@ sub run {
 			EV::unloop;
 		});
 	};
+	$s->preloop;
+	my $ac;
+	if($s->{allow_perl_signal_handlers}) {
+		$ac = EV::check sub { 
+		};
+	}
 	EV::loop;
 }
 sub init {  # virtual function
+}
+sub preloop { 
 }
 
 sub makeToken { 
@@ -281,5 +290,33 @@ sub url_escape {
 
 =pod
 
+=head2 allow_perl_signal_handlers
+
+Normally EV as a libev wrapper skips Perl signals processing unless returning control to Perl. 
+To make your app able to process Perl signals in the event is a fast C-level library (libev), 
+use *allow_perl_signal_handlers* option to wake up Perl at each event loop iteration.
+Define the Perl signal handlers in preloop virtual function.
+
+Example:
+
+ { package My::API;
+   BEGIN { WWW::Easy::AnyEventPg->import; }
+   my @handlers;
+   sub preloop {
+       my $self = shift;
+       push @handlers, AE::child $fp_pid, sub {
+	       my ($pid, $status) = @_;
+           warn "Child $pid has exited with status $status";
+           $self->graceful(sub {
+               warn "Server stopped";
+               EV::unloop;
+           });
+       };
+   }
+ }
+ my $server = My::API->new(
+    allow_perl_signal_handlers => 1
+ ); 
+ $server->run;
 
 =cut

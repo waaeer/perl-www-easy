@@ -185,14 +185,14 @@ foreach my $i (1..100) {
 }
 
 is(normalize_json(call_api("mget", '["public.object", {"x":7,"_fields":["id","name","x","created_by"]},1,1]')) ,
-   normalize_json( {n=> "1", list => [ { id=>"7", x=>"7", name => 'x7', created_by => "0" }]}),
+   normalize_json( {n=> 1, list => [ { id=>"7", x=>"7", name => 'x7', created_by => "0" }]}),
    'x7'
 );
 
 call_api("msave", '["public.object", {"_order":"id"},1,2,{"name":"xyz"}]');
 
 is(normalize_json( call_api("mget", '["public.object", {"_order":"id","_fields":["id","name"]},1,4]')),
-   normalize_json( {n=> "100", list => [ { id=>"1",name => 'xyz'}, { id=>"2",name => 'xyz'}, { id=>"3",name => 'x3'}, { id=>"4",name => 'x4'}]}),
+   normalize_json( {n=> 100, list => [ { id=>"1",name => 'xyz'}, { id=>"2",name => 'xyz'}, { id=>"3",name => 'x3'}, { id=>"4",name => 'x4'}]}),
    'msaved'
 );
 
